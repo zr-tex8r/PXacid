@@ -9,7 +9,7 @@ our $opl2ofm = "opl2ofm";
 our $ovp2ovf = "ovp2ovf";
 #
 our $prog_name = "pxpjcid";
-our $version = "0.3.0-pre";
+our $version = "0.3.0";
 our $mod_date = "2017/04/19";
 our $temp_base = "__$prog_name$$";
 our $gid_offset = 0;

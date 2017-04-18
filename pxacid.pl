@@ -20,7 +20,7 @@ our $std_slant = 0.167;
 our $gid_offset = 0;
 #
 our $prog_name = "pxacid";
-our $version = "0.3.0-pre";
+our $version = "0.3.0";
 our $mod_date = "2017/04/19";
 our $temp_base = "__$prog_name$$";
 
