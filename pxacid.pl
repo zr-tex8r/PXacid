@@ -16,11 +16,13 @@ our $min_kern = 0.01;
 # 既定のスラント値. スラント体の SLANT 値に用いられる他, \XeTeXglyphbounds
 # が使えない場合にはイタリック体の SLANT 値にも用いられる.
 our $std_slant = 0.167;
+# アレ
+our $gid_offset = 0;
 #
 use Data::Dump 'dump';
 our $prog_name = "pxacid";
-our $version = "0.2.3";
-our $mod_date = "2011/02/17";
+our $version = "0.2.4";
+our $mod_date = "2013/01/04";
 our $temp_base = "__$prog_name$$";
 
 ##-----------------------------------------------------------
@@ -819,18 +821,21 @@ our $ucs2aj_table = {
 sub ucs2aj {
   my ($uc, $ital) = @_;
   my $t = $ucs2aj_table->{$uc};
-  return (ref $t) ? $t->[($ital) ? 1 : 0] : $t;
+  my $aj = (ref $t) ? $t->[($ital) ? 1 : 0] : $t;
+  return (defined $aj) ? ($aj + $gid_offset) : undef;
 }
 
 # 用いられれうる全ての Unicode 位置のリスト.
 our $target_ucs;
 # 用いられれうる全ての AJ1 CID 値のリスト.
 our $target_aj;
-{
+sub gen_target_list {
   $target_ucs = [ sort { $a <=> $b } (keys %$ucs2aj_table) ];
   my %chk;
   foreach my $t (values %$ucs2aj_table) {
-    foreach my $uc ((ref $t) ? @$t : $t) { $chk{$uc} = 1; }
+    foreach my $aj ((ref $t) ? @$t : $t) {
+      $chk{$aj + $gid_offset} = 1;
+    }
   }
   $target_aj = [ sort { $a <=> $b } (keys %chk) ];
 }
@@ -955,10 +960,10 @@ sub query_xetex {
 %% スラント値の推定
 \fontU
 \ifx\XeTeXglyphbounds\undefined\else
-\dimA=\XeTeXglyphbounds 3 129\relax
-\dimB=\XeTeXglyphbounds 3 9572\relax
+\dimA=\XeTeXglyphbounds 3 ?129?\relax
+\dimB=\XeTeXglyphbounds 3 ?9572?\relax
 \advance\dimA-\dimB
-\dimB=\XeTeXglyphbounds 2 129\relax
+\dimB=\XeTeXglyphbounds 2 ?129?\relax
 \outData{slantx=\the\dimA}
 \outData{slanty=\the\dimB}
 \fi
@@ -1025,6 +1030,7 @@ sub query_xetex {
 \bye
 END
   s/%%.*$/%/gm; s/\?FONT\?/$font/g;
+  s/\?(\d+)\?/$1+$gid_offset/ge;
   $t = do_list($chars); s/\?DO_UCS\?/$t/g;
   $t = do_list($target_aj); s/\?DO_AJ\?/$t/g;
   return $_;
@@ -1595,10 +1601,12 @@ sub main {
   my $prop = read_option();
   (defined $prop->{min_kern}) and $min_kern = $prop->{min_kern};
   (defined $prop->{std_slant}) and $std_slant = $prop->{std_slant};
+  (defined $prop->{gid_offset}) and $gid_offset = $prop->{gid_offset};
   append_mode($prop->{append});
   use_berry($prop->{use_berry});
   save_source($prop->{save_source});
   save_log($prop->{save_log});
+  gen_target_list();
   generate($prop->{font}, $prop->{family}, $prop->{series},
     $prop->{tfm_family});
 }
@@ -1633,6 +1641,10 @@ sub read_option {
       ($arg =~ m/^[.0-9]+$/ && 0 <= $arg && $arg <= 1)
         or error("bad slant value", $arg);
       $prop->{std_slant} = $arg;
+    } elsif (($arg) = $opt =~ m/^--gid-offset(?:=(.*))?/) {
+      (defined $arg) or $arg = shift(@ARGV);
+      ($arg =~ m/^[0-9]+$/) or error("bad gid-offset value", $arg);
+      $prop->{gid_offset} = $arg;
     } else {
       error("invalid option", $opt);
     }
@@ -1667,6 +1679,7 @@ Options are:
   -s / --save-source        save PL/OPL/OVP files
        --min-kern=<val>     minimum kern to be employed
        --slant=<val>        slant value
+       --gid-offset=<val>   offset between CID and GID
 END
 }
 
