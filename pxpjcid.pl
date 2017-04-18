@@ -8,10 +8,9 @@ our $pltotf = "uppltotf";
 our $opl2ofm = "opl2ofm";
 our $ovp2ovf = "ovp2ovf";
 #
-use Data::Dump 'dump';
 our $prog_name = "pxpjcid";
-our $version = "0.2.0";
-our $mod_date = "2014/01/05";
+our $version = "0.3.0-pre";
+our $mod_date = "2017/04/19";
 our $temp_base = "__$prog_name$$";
 our $gid_offset = 0;
 

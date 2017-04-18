@@ -19,10 +19,9 @@ our $std_slant = 0.167;
 # ÉAÉå
 our $gid_offset = 0;
 #
-use Data::Dump 'dump';
 our $prog_name = "pxacid";
-our $version = "0.2.4";
-our $mod_date = "2013/01/04";
+our $version = "0.3.0-pre";
+our $mod_date = "2017/04/19";
 our $temp_base = "__$prog_name$$";
 
 ##-----------------------------------------------------------
