@@ -2,21 +2,21 @@
 # pxacid.pl
 #
 use strict;
-# plain XeTeX (ƒoƒbƒ`ƒ‚[ƒh)‚ÌƒRƒ}ƒ“ƒhƒ‰ƒCƒ“
+# plain XeTeX (ãƒãƒƒãƒãƒ¢ãƒ¼ãƒ‰)ã®ã‚³ãƒãƒ³ãƒ‰ãƒ©ã‚¤ãƒ³
 our $xetex = "xetex -interaction=batchmode";
-# pltotf ‚ÌƒRƒ}ƒ“ƒhƒ‰ƒCƒ“
+# pltotf ã®ã‚³ãƒãƒ³ãƒ‰ãƒ©ã‚¤ãƒ³
 our $pltotf = "pltotf";
-# opl2ofm ‚ÌƒRƒ}ƒ“ƒhƒ‰ƒCƒ“
+# opl2ofm ã®ã‚³ãƒãƒ³ãƒ‰ãƒ©ã‚¤ãƒ³
 our $opl2ofm = "opl2ofm";
-# ovp2ovf ‚ÌƒRƒ}ƒ“ƒhƒ‰ƒCƒ“
+# ovp2ovf ã®ã‚³ãƒãƒ³ãƒ‰ãƒ©ã‚¤ãƒ³
 our $ovp2ovf = "ovp2ovf";
-# ƒJ[ƒjƒ“ƒO‚ÌÅ¬’l(em’PˆÊ). ƒtƒHƒ“ƒg’†‚ÌƒJ[ƒjƒ“ƒO‚Å‚±‚Ì’l–¢–‚Ì‚à‚Ì‚Í
-# –³‹‚³‚ê‚é.
+# ã‚«ãƒ¼ãƒ‹ãƒ³ã‚°ã®æœ€å°å€¤(emå˜ä½). ãƒ•ã‚©ãƒ³ãƒˆä¸­ã®ã‚«ãƒ¼ãƒ‹ãƒ³ã‚°ã§ã“ã®å€¤æœªæº€ã®ã‚‚ã®ã¯
+# ç„¡è¦–ã•ã‚Œã‚‹.
 our $min_kern = 0.01;
-# Šù’è‚ÌƒXƒ‰ƒ“ƒg’l. ƒXƒ‰ƒ“ƒg‘Ì‚Ì SLANT ’l‚É—p‚¢‚ç‚ê‚é‘¼, \XeTeXglyphbounds
-# ‚ªg‚¦‚È‚¢ê‡‚É‚ÍƒCƒ^ƒŠƒbƒN‘Ì‚Ì SLANT ’l‚É‚à—p‚¢‚ç‚ê‚é.
+# æ—¢å®šã®ã‚¹ãƒ©ãƒ³ãƒˆå€¤. ã‚¹ãƒ©ãƒ³ãƒˆä½“ã® SLANT å€¤ã«ç”¨ã„ã‚‰ã‚Œã‚‹ä»–, \XeTeXglyphbounds
+# ãŒä½¿ãˆãªã„å ´åˆã«ã¯ã‚¤ã‚¿ãƒªãƒƒã‚¯ä½“ã® SLANT å€¤ã«ã‚‚ç”¨ã„ã‚‰ã‚Œã‚‹.
 our $std_slant = 0.167;
-# ƒAƒŒ
+# ã‚¢ãƒ¬
 our $gid_offset = 0;
 #
 our $prog_name = "pxacid";
@@ -25,38 +25,38 @@ our $mod_date = "2017/04/19";
 our $temp_base = "__$prog_name$$";
 
 ##-----------------------------------------------------------
-## TeX ƒGƒ“ƒR[ƒfƒBƒ“ƒO‚Æ Unicode ˆÊ’u‚Æ‚Ì‘Î‰
+## TeX ã‚¨ãƒ³ã‚³ãƒ¼ãƒ‡ã‚£ãƒ³ã‚°ã¨ Unicode ä½ç½®ã¨ã®å¯¾å¿œ
 
 use constant {
   XNAV => 0, XCWM => 1, XACC => 2, XBLW => 3, XLIN => 4,
   XCWC => 5, XCWA => 6
 };
-# uƒnƒbƒVƒ…QÆ’lv‚Ì\¬
-# NAV : AJ1 ‚Å‚Í•\‚¹‚È‚¢•¶š
+# ã€Œãƒãƒƒã‚·ãƒ¥å‚ç…§å€¤ã€ã®æ§‹æˆ
+# NAV : AJ1 ã§ã¯è¡¨ã›ãªã„æ–‡å­—
 sub NAV () { { type => XNAV } }
-# CWM : compound-word mark. ƒ[ƒ•, x-ƒnƒCƒg‚ÅšŒ`‚ğ‚à‚½‚È‚¢•¶š.
-# VF ‚Å‘Î‰‚·‚é.
+# CWM : compound-word mark. ã‚¼ãƒ­å¹…, x-ãƒã‚¤ãƒˆã§å­—å½¢ã‚’ã‚‚ãŸãªã„æ–‡å­—.
+# VF ã§å¯¾å¿œã™ã‚‹.
 sub CWM () { { type => XCWM } }
-# CWC : ƒLƒƒƒbƒvƒnƒCƒg‚Ì compound-word mark.
+# CWC : ã‚­ãƒ£ãƒƒãƒ—ãƒã‚¤ãƒˆã® compound-word mark.
 sub CWC () { { type => XCWC } }
-# CWA : ƒAƒZƒ“ƒ_ƒnƒCƒg‚Ì compound-word mark.
+# CWA : ã‚¢ã‚»ãƒ³ãƒ€ãƒã‚¤ãƒˆã® compound-word mark.
 sub CWA () { { type => XCWA } }
-# ACC"ab" : •¶š b ‚ÉƒAƒNƒZƒ“ƒg a ‚ğ \accent ‚Å‡¬‚µ‚½‚à‚Ì.
+# ACC"ab" : æ–‡å­— b ã«ã‚¢ã‚¯ã‚»ãƒ³ãƒˆ a ã‚’ \accent ã§åˆæˆã—ãŸã‚‚ã®.
 sub ACC { { type => XACC, arg => clist(@_) } }
-# BLW"ab" : •¶š b ‚É‘Î‚µ’Pƒ‚ÉƒAƒNƒZƒ“ƒg a ‚ğd‚Ë‚½‚à‚Ì.
-# ‰º•tƒAƒNƒZƒ“ƒg‚Ì‚½‚ß‚É—p‚¢‚ç‚ê‚é.
+# BLW"ab" : æ–‡å­— b ã«å¯¾ã—å˜ç´”ã«ã‚¢ã‚¯ã‚»ãƒ³ãƒˆ a ã‚’é‡ã­ãŸã‚‚ã®.
+# ä¸‹ä»˜ã‚¢ã‚¯ã‚»ãƒ³ãƒˆã®ãŸã‚ã«ç”¨ã„ã‚‰ã‚Œã‚‹.
 sub BLW { { type => XBLW, arg => clist(@_) } }
-# LIN"ab" : ’Pƒ‚É•¶š a, b ‚ğ‡‚Éo—Í‚µ‚½‚à‚Ì‚Æ“¯‚¶.
+# LIN"ab" : å˜ç´”ã«æ–‡å­— a, b ã‚’é †ã«å‡ºåŠ›ã—ãŸã‚‚ã®ã¨åŒã˜.
 sub LIN { { type => XLIN, arg => clist(@_) } }
 sub clist { [ map { ord($_) } (split(m//, $_[0])) ] }
 sub zip { map { [$_[0][$_], $_[1][$_]] } (0..$#{$_[0]}) }
 
-# tex2ucs ‚Å—p‚¢‚é. ƒGƒ“ƒR[ƒfƒBƒ“ƒO–¼ $enc, •„†ˆÊ’u $tc ‚É
-# ‘Î‚µ, $tex2ucs_table{$enc}{$tc} ‚Í‘Î‰‚·‚é Unicode ˆÊ’u‚ğ•\‚·.
-# ‚½‚¾‚µ, ”z—ñQÆ‚É‚È‚Á‚Ä‚¢‚éê‡‚Í, •¡”‚ÌŒó•â‚ğD‚Ü‚µ‚¢‡‚É
-# •À‚×‚½‚à‚Ì‚ğ•\‚·. (AJ1-4 ‘Î‰‚ÌƒtƒHƒ“ƒg‚Åˆê•”‚Ì•¶š‚ğ‡¬‚Å
-# •â‚¤‚±‚Æ‚ğ‘z’è.) ‚Ü‚½, ‘Î‰æ‚ª‡¬“™‚Ì“Áê‚Èw’è‚ÍƒnƒbƒVƒ…
-# QÆ‚Å•\‚³‚ê‚Ä‚¢‚é.
+# tex2ucs ã§ç”¨ã„ã‚‹. ã‚¨ãƒ³ã‚³ãƒ¼ãƒ‡ã‚£ãƒ³ã‚°å $enc, ç¬¦å·ä½ç½® $tc ã«
+# å¯¾ã—, $tex2ucs_table{$enc}{$tc} ã¯å¯¾å¿œã™ã‚‹ Unicode ä½ç½®ã‚’è¡¨ã™.
+# ãŸã ã—, é…åˆ—å‚ç…§ã«ãªã£ã¦ã„ã‚‹å ´åˆã¯, è¤‡æ•°ã®å€™è£œã‚’å¥½ã¾ã—ã„é †ã«
+# ä¸¦ã¹ãŸã‚‚ã®ã‚’è¡¨ã™. (AJ1-4 å¯¾å¿œã®ãƒ•ã‚©ãƒ³ãƒˆã§ä¸€éƒ¨ã®æ–‡å­—ã‚’åˆæˆã§
+# è£œã†ã“ã¨ã‚’æƒ³å®š.) ã¾ãŸ, å¯¾å¿œå…ˆãŒåˆæˆç­‰ã®ç‰¹æ®ŠãªæŒ‡å®šã¯ãƒãƒƒã‚·ãƒ¥
+# å‚ç…§ã§è¡¨ã•ã‚Œã¦ã„ã‚‹.
 our $tex2ucs_table = {
 'OT1' => [
 # Greek uppercase
@@ -89,8 +89,8 @@ our $tex2ucs_table = {
 0x00C6,
 0x0152,
 0x00D8,
-# lslash ‚ÍƒŠƒKƒ`ƒƒ‚Å‘Î‰‚·‚é. ‚±‚Ì•„†ˆÊ’u‚ğ—LŒø‚É‚·‚é•K—v‚ª‚ ‚é
-# ‚½‚ß, æ‚è‚ ‚¦‚¸ CWM ‚ğ“ü‚ê‚Ä‚¨‚­
+# lslash ã¯ãƒªã‚¬ãƒãƒ£ã§å¯¾å¿œã™ã‚‹. ã“ã®ç¬¦å·ä½ç½®ã‚’æœ‰åŠ¹ã«ã™ã‚‹å¿…è¦ãŒã‚ã‚‹
+# ãŸã‚, å–ã‚Šã‚ãˆãš CWM ã‚’å…¥ã‚Œã¦ãŠã
 CWM,
 # quasi-ASCII
 0x0021,
@@ -298,12 +298,12 @@ CWM,
 0x0178,
 0x00A0..0x00FF,
 ],
-# ˆÙ‘Ìš(variant)‚Ìæˆµ‚É‚Â‚¢‚Ä:
-# Šî–{“I‚É, Œ³‚ÌšŒ`‚ÆˆÙ‚È‚é‚±‚Æ‚ª—v¿‚³‚ê‚éˆÙ‘Ìš‚É‚Â‚¢‚Ä‚Í, Œ³‚Ì
-# šŒ`‚Å‚Ì‘ã—p‚Ís‚í‚È‚¢. •K‚¸‚µ‚à‚»‚¤‚Å‚Í‚È‚¢ê‡‚Í, Œ³‚ÌšŒ`‚ğ
-# Š„‚è“–‚Ä‚Ä‚¢‚é.
+# ç•°ä½“å­—(variant)ã®å–æ‰±ã«ã¤ã„ã¦:
+# åŸºæœ¬çš„ã«, å…ƒã®å­—å½¢ã¨ç•°ãªã‚‹ã“ã¨ãŒè¦è«‹ã•ã‚Œã‚‹ç•°ä½“å­—ã«ã¤ã„ã¦ã¯, å…ƒã®
+# å­—å½¢ã§ã®ä»£ç”¨ã¯è¡Œã‚ãªã„. å¿…ãšã—ã‚‚ãã†ã§ã¯ãªã„å ´åˆã¯, å…ƒã®å­—å½¢ã‚’
+# å‰²ã‚Šå½“ã¦ã¦ã„ã‚‹.
 'TS1' => [
-(NAV) x 13, # ‘å•¶š—pƒAƒNƒZƒ“ƒg‚Í AJ1 ‚É‚È‚¢
+(NAV) x 13, # å¤§æ–‡å­—ç”¨ã‚¢ã‚¯ã‚»ãƒ³ãƒˆã¯ AJ1 ã«ãªã„
 NAV, # base straight single quote
 (undef) x 4,
 NAV, # base straight double quote
@@ -414,15 +414,15 @@ NAV, # copyleft
 (undef) x 9.
 ],
 };
-# ƒCƒ^ƒŠƒbƒN‚Ìê‡‚Ì $tex2ucs_table ‚Ì·•ª. (OT1 ‚ÍƒVƒF[ƒv‚É
-# ‚æ‚Á‚Äˆê•”‚Ì•„†ˆÊ’u‚Ìu•¶šv‚ªˆÙ‚È‚é.)
+# ã‚¤ã‚¿ãƒªãƒƒã‚¯ã®å ´åˆã® $tex2ucs_table ã®å·®åˆ†. (OT1 ã¯ã‚·ã‚§ãƒ¼ãƒ—ã«
+# ã‚ˆã£ã¦ä¸€éƒ¨ã®ç¬¦å·ä½ç½®ã®ã€Œæ–‡å­—ã€ãŒç•°ãªã‚‹.)
 our $tex2ucs_ital_table = {
 'OT1' => [
 (undef) x 36,
 0x00A3
 ],
 };
-# ƒŠƒKƒ`ƒƒî•ñ. ‚±‚±‚Å‚Í TeX ƒGƒ“ƒR[ƒfƒBƒ“ƒO‚Ì•„†ˆÊ’u‚ğ—p‚¢‚é.
+# ãƒªã‚¬ãƒãƒ£æƒ…å ±. ã“ã“ã§ã¯ TeX ã‚¨ãƒ³ã‚³ãƒ¼ãƒ‡ã‚£ãƒ³ã‚°ã®ç¬¦å·ä½ç½®ã‚’ç”¨ã„ã‚‹.
 our $ligature_table = {
 'OT1' => [
 [0x0B,0x69,0x0E],
@@ -478,8 +478,8 @@ our $ligature_table = {
 };
 
 # tex2ucs($enc, $tc, $ital)
-# TeX ƒGƒ“ƒR[ƒfƒBƒ“ƒO $enc ‚Å‚Ì•„†ˆÊ’u $tc ‚Ì•¶š‚É‘Î‰‚·‚é Unicode
-# •¶š. ^‹U’l $ital ‚ÍƒCƒ^ƒŠƒbƒNw’è.
+# TeX ã‚¨ãƒ³ã‚³ãƒ¼ãƒ‡ã‚£ãƒ³ã‚° $enc ã§ã®ç¬¦å·ä½ç½® $tc ã®æ–‡å­—ã«å¯¾å¿œã™ã‚‹ Unicode
+# æ–‡å­—. çœŸå½å€¤ $ital ã¯ã‚¤ã‚¿ãƒªãƒƒã‚¯æŒ‡å®š.
 sub tex2ucs {
   my ($enc, $tc, $ital) = @_;
   my $t = ($ital) ? $tex2ucs_ital_table->{$enc}[$tc] : undef;
@@ -489,10 +489,10 @@ sub tex2ucs {
 }
 
 ##----------------------------------------------------------
-## Unicode ˆÊ’u‚©‚ç AJ1 CID ‚Ö‚Ì‘Î‰
+## Unicode ä½ç½®ã‹ã‚‰ AJ1 CID ã¸ã®å¯¾å¿œ
 
-# ucs2aj() ‚Å—p‚¢‚ç‚ê‚éƒe[ƒuƒ‹. ’l‚ª”z—ñQÆ‚Å‚ ‚é‚à‚Ì‚Í, ’¼—§‚Æ
-# ƒCƒ^ƒŠƒbƒN‚Å‘Î‰‚ªˆÙ‚È‚é‚à‚Ì‚ğ•\‚·.
+# ucs2aj() ã§ç”¨ã„ã‚‰ã‚Œã‚‹ãƒ†ãƒ¼ãƒ–ãƒ«. å€¤ãŒé…åˆ—å‚ç…§ã§ã‚ã‚‹ã‚‚ã®ã¯, ç›´ç«‹ã¨
+# ã‚¤ã‚¿ãƒªãƒƒã‚¯ã§å¯¾å¿œãŒç•°ãªã‚‹ã‚‚ã®ã‚’è¡¨ã™.
 our $ucs2aj_table = {
 0x0020=>[1,9444],
 0x0021=>[2,9445],
@@ -815,8 +815,8 @@ our $ucs2aj_table = {
 };
 
 ## ucs2aj($uc, $it)
-# Unicode ˆÊ’u $uc ‚Ì•¶š‚É‘Î‰‚·‚é AJ1 ‚Ì CID. $ital ‚ª^‚Ìê‡‚Í
-# ƒCƒ^ƒŠƒbƒN‚Ì‘Î‰‚ğ—p‚¢‚é.
+# Unicode ä½ç½® $uc ã®æ–‡å­—ã«å¯¾å¿œã™ã‚‹ AJ1 ã® CID. $ital ãŒçœŸã®å ´åˆã¯
+# ã‚¤ã‚¿ãƒªãƒƒã‚¯ã®å¯¾å¿œã‚’ç”¨ã„ã‚‹.
 sub ucs2aj {
   my ($uc, $ital) = @_;
   my $t = $ucs2aj_table->{$uc};
@@ -824,9 +824,9 @@ sub ucs2aj {
   return (defined $aj) ? ($aj + $gid_offset) : undef;
 }
 
-# —p‚¢‚ç‚ê‚ê‚¤‚é‘S‚Ä‚Ì Unicode ˆÊ’u‚ÌƒŠƒXƒg.
+# ç”¨ã„ã‚‰ã‚Œã‚Œã†ã‚‹å…¨ã¦ã® Unicode ä½ç½®ã®ãƒªã‚¹ãƒˆ.
 our $target_ucs;
-# —p‚¢‚ç‚ê‚ê‚¤‚é‘S‚Ä‚Ì AJ1 CID ’l‚ÌƒŠƒXƒg.
+# ç”¨ã„ã‚‰ã‚Œã‚Œã†ã‚‹å…¨ã¦ã® AJ1 CID å€¤ã®ãƒªã‚¹ãƒˆ.
 our $target_aj;
 sub gen_target_list {
   $target_ucs = [ sort { $a <=> $b } (keys %$ucs2aj_table) ];
@@ -839,11 +839,11 @@ sub gen_target_list {
   $target_aj = [ sort { $a <=> $b } (keys %chk) ];
 }
 
-# ‘ÎÛ‚Æ‚È‚é TeX ƒGƒ“ƒR[ƒfƒBƒ“ƒO‚ÌƒŠƒXƒg.
+# å¯¾è±¡ã¨ãªã‚‹ TeX ã‚¨ãƒ³ã‚³ãƒ¼ãƒ‡ã‚£ãƒ³ã‚°ã®ãƒªã‚¹ãƒˆ.
 our $enc_list = [ keys %$tex2ucs_table ];
 
-# ‚È‚¨, ’¼—§‚Ì CID ‚©‚çƒCƒ^ƒŠƒbƒN‚Ö‚Ì•ÏŠ·‚ÍŸ‚ÌŠÖ”‚Ås‚Á‚½.
-# Ql‚Æ‚µ‚Ä‹L‚µ‚Ä‚¨‚­.
+# ãªãŠ, ç›´ç«‹ã® CID ã‹ã‚‰ã‚¤ã‚¿ãƒªãƒƒã‚¯ã¸ã®å¤‰æ›ã¯æ¬¡ã®é–¢æ•°ã§è¡Œã£ãŸ.
+# å‚è€ƒã¨ã—ã¦è¨˜ã—ã¦ãŠã.
 sub to_italic {
   my ($u) = @_;
   return (1 <= $u && $u <= 230) ? ($u + 9444 - 1) :
@@ -857,15 +857,15 @@ sub to_italic {
 }
 
 ##----------------------------------------------------------
-## ƒtƒHƒ“ƒg‚ÌƒƒgƒŠƒbƒNƒf[ƒ^‚ğ XeTeX ‚ğ—p‚¢‚Äæ“¾‚·‚é
+## ãƒ•ã‚©ãƒ³ãƒˆã®ãƒ¡ãƒˆãƒªãƒƒã‚¯ãƒ‡ãƒ¼ã‚¿ã‚’ XeTeX ã‚’ç”¨ã„ã¦å–å¾—ã™ã‚‹
 
 # get_metric($font, $chars)
-# ƒtƒHƒ“ƒg $font ‚ÌƒƒgƒŠƒbƒNî•ñ‚ğ XeTeX ‚ğ—p‚¢‚Äæ“¾‚µ, ƒnƒbƒVƒ…‚É
-# Ši”[‚µ‚Ä•Ô‚·. $chars ‚Í‘ÎÛ‚Æ‚·‚é Unicode •¶š‚ÌƒŠƒXƒg(¡‚Íí‚É
-# $target_ucs ‚ğw’è‚µ‚Ä‚¢‚é).
+# ãƒ•ã‚©ãƒ³ãƒˆ $font ã®ãƒ¡ãƒˆãƒªãƒƒã‚¯æƒ…å ±ã‚’ XeTeX ã‚’ç”¨ã„ã¦å–å¾—ã—, ãƒãƒƒã‚·ãƒ¥ã«
+# æ ¼ç´ã—ã¦è¿”ã™. $chars ã¯å¯¾è±¡ã¨ã™ã‚‹ Unicode æ–‡å­—ã®ãƒªã‚¹ãƒˆ(ä»Šã¯å¸¸ã«
+# $target_ucs ã‚’æŒ‡å®šã—ã¦ã„ã‚‹).
 sub get_metric {
   my ($font, $chars) = @_;
-  # TeXƒvƒƒOƒ‰ƒ€‚ğƒtƒ@ƒCƒ‹‚É‘‚«o‚µ‚Ä XeTeX Às
+  # TeXãƒ—ãƒ­ã‚°ãƒ©ãƒ ã‚’ãƒ•ã‚¡ã‚¤ãƒ«ã«æ›¸ãå‡ºã—ã¦ XeTeX å®Ÿè¡Œ
   write_whole("$temp_base.tex", query_xetex($font, $chars), 1);
   if (-s "$prog_name-save.log") {
     my $t = read_whole("$prog_name-save.log", 1);
@@ -875,7 +875,7 @@ sub get_metric {
   }
   (-s "$temp_base.log")
     or error("XeTeX execution failed");
-  # ƒƒO“Ç‚İ‚İ
+  # ãƒ­ã‚°èª­ã¿è¾¼ã¿
   my $lin; my $par = {};
   open(my $hi, '<', "$temp_base.log")
     or error("cannot read file", "$temp_base.log");
@@ -887,16 +887,16 @@ sub get_metric {
     }
   }
   close($hi);
-  # ”h¶ƒpƒ‰ƒƒ^
+  # æ´¾ç”Ÿãƒ‘ãƒ©ãƒ¡ã‚¿
   derive_param($par);
   return $par;
 }
 
 # nest_assign($base, $text)
-# $text ‚ª "a:b:c=val" ‚ÌŒ`®‚ÌA$base->{a}{b}{c} ‚É val
-# ‚ğ‘ã“ü‚·‚é. ‚½‚¾‚µ, val ‚ª "XXXpt" (XXX ‚ÍÀ”’l)‚ÌŒ`®‚Ì
-# ê‡‚Í XXX / 10 (ƒfƒUƒCƒ“ƒTƒCƒY 10pt ‚É‘Î‚·‚é‘Š‘Î’l)‚É’u‚«
-# Š·‚¦‚é. 
+# $text ãŒ "a:b:c=val" ã®å½¢å¼ã®æ™‚ã€$base->{a}{b}{c} ã« val
+# ã‚’ä»£å…¥ã™ã‚‹. ãŸã ã—, val ãŒ "XXXpt" (XXX ã¯å®Ÿæ•°å€¤)ã®å½¢å¼ã®
+# å ´åˆã¯ XXX / 10 (ãƒ‡ã‚¶ã‚¤ãƒ³ã‚µã‚¤ã‚º 10pt ã«å¯¾ã™ã‚‹ç›¸å¯¾å€¤)ã«ç½®ã
+# æ›ãˆã‚‹. 
 sub nest_assign {
   my ($base, $text) = @_;
   my ($pname, $value) = ($text =~ m/^(.*)=(.*)$/) or die;
@@ -918,14 +918,14 @@ sub nest_assign_sub {
 }
 
 # query_xetex($font, $chars)
-# get_metric() ‚Å—p‚¢‚é XeTeX ƒ\[ƒX‚Ì“à—e.
+# get_metric() ã§ç”¨ã„ã‚‹ XeTeX ã‚½ãƒ¼ã‚¹ã®å†…å®¹.
 sub query_xetex {
   my ($font, $chars) = @_; my ($t);
   local $_ = <<'END';
-%% ƒtƒHƒ“ƒg’è‹`
+%% ãƒ•ã‚©ãƒ³ãƒˆå®šç¾©
 \font\fontU="[?FONT?]:-liga,+kern"
 \font\fontI="[?FONT?]:-liga,+kern,+ital"
-%% •Ï”’è‹`
+%% å¤‰æ•°å®šç¾©
 \newcount\cntA
 \newcount\cntB
 \newcount\cntC
@@ -938,14 +938,14 @@ sub query_xetex {
 \newdimen\dimC
 \newbox\boxA
 \newbox\boxB
-%% o—Íˆ—
+%% å‡ºåŠ›å‡¦ç†
 \def\debug#1{\immediate\write16{#1}}
 \def\writeLog#1{\immediate\write-1{#1}}
 \def\outData#1{\writeLog{!OUT!#1}}
-%% •„†’l‚ÌƒŠƒXƒg
+%% ç¬¦å·å€¤ã®ãƒªã‚¹ãƒˆ
 \def\doForEachUcs{?DO_UCS?}
 \def\doForEachAj{?DO_AJ?}
-%% \ifitalok: 'ital'‚ªg‚¦‚é‚©
+%% \ifitalok: 'ital'ãŒä½¿ãˆã‚‹ã‹
 \newif\ifitalok
 \cntA="6C61746E %'latn'
 \cntB="6974616C %'ital'
@@ -956,7 +956,7 @@ sub query_xetex {
   \ifnum\cntC=\cntB \italoktrue \fi
 \advance\cntI 1 \repeat
 \outData{italok=\ifitalok 1\else 0\fi}
-%% ƒXƒ‰ƒ“ƒg’l‚Ì„’è
+%% ã‚¹ãƒ©ãƒ³ãƒˆå€¤ã®æ¨å®š
 \fontU
 \ifx\XeTeXglyphbounds\undefined\else
 \dimA=\XeTeXglyphbounds 3 ?129?\relax
@@ -966,12 +966,12 @@ sub query_xetex {
 \outData{slantx=\the\dimA}
 \outData{slanty=\the\dimB}
 \fi
-%% Unicode •¶š‚É‘Î‚µŠî–{ƒƒgƒŠƒbƒN‚ğæ“¾‚µo—Í‚·‚é
-%% \getMetric\<ƒtƒHƒ“ƒg>{<•\¦Ú“ª«>}
+%% Unicode æ–‡å­—ã«å¯¾ã—åŸºæœ¬ãƒ¡ãƒˆãƒªãƒƒã‚¯ã‚’å–å¾—ã—å‡ºåŠ›ã™ã‚‹
+%% \getMetric\<ãƒ•ã‚©ãƒ³ãƒˆ>{<è¡¨ç¤ºæ¥é ­è¾>}
 \def\getMetric#1#2{%
   #1\def\pname{#2}%
   \let\do\doGetMetric \doForEachUcs}
-\def\doGetMetric#1{%% {<Unicode’l>}
+\def\doGetMetric#1{%% {<Unicodeå€¤>}
   \cntC=#1
   \iffontchar\font\cntC
     \outData{\pname:#1:wd=\the\fontcharwd\font\cntC}%
@@ -982,8 +982,8 @@ sub query_xetex {
 \ifitalok
 \getMetric\fontI{uit}
 \fi
-%% ƒyƒAƒJ[ƒjƒ“ƒO‚Ì’l‚ğŒvZ‚µo—Í‚·‚é
-%% \getKern\<ƒtƒHƒ“ƒg>{<•\¦Ú“ª«>}
+%% ãƒšã‚¢ã‚«ãƒ¼ãƒ‹ãƒ³ã‚°ã®å€¤ã‚’è¨ˆç®—ã—å‡ºåŠ›ã™ã‚‹
+%% \getKern\<ãƒ•ã‚©ãƒ³ãƒˆ>{<è¡¨ç¤ºæ¥é ­è¾>}
 \def\getKern#1#2{%
   #1\def\pname{#2}%
   \let\do\doGetKernOuter \doForEachUcs}
@@ -991,10 +991,10 @@ sub query_xetex {
   \cntC=#1
   \iffontchar\font\cntC
   {\let\do\doGetKernInner \doForEachUcs}\fi}
-%% \XeTeXglyph ‚Å‚Ìo—Í‚ÌŠÔ‚É‚ÍƒJ[ƒjƒ“ƒO‚ª“ü‚ç‚È‚¢‚Ì‚Å
-%% ‚±‚±‚Å‚Í \char ‚ğg‚¤. ‚³‚ç‚É +ital w’è‚ÌƒtƒHƒ“ƒg‚Å‚Í
-%% \fontcharwd “™‚ª³‚µ‚¢’l‚ğ•Ô‚³‚È‚¢(-ital ‚Ìê‡‚Ì’l‚É
-%% ‚È‚é)‚Ì‚Å, ‚»‚ê‚à”ğ‚¯‚Ä‚¢‚é.
+%% \XeTeXglyph ã§ã®å‡ºåŠ›ã®é–“ã«ã¯ã‚«ãƒ¼ãƒ‹ãƒ³ã‚°ãŒå…¥ã‚‰ãªã„ã®ã§
+%% ã“ã“ã§ã¯ \char ã‚’ä½¿ã†. ã•ã‚‰ã« +ital æŒ‡å®šã®ãƒ•ã‚©ãƒ³ãƒˆã§ã¯
+%% \fontcharwd ç­‰ãŒæ­£ã—ã„å€¤ã‚’è¿”ã•ãªã„(-ital ã®å ´åˆã®å€¤ã«
+%% ãªã‚‹)ã®ã§, ãã‚Œã‚‚é¿ã‘ã¦ã„ã‚‹.
 \def\doGetKernInner#1{%
   \cntD=#1
   \iffontchar\font\cntD
@@ -1011,12 +1011,12 @@ sub query_xetex {
 \ifitalok
 \getKern\fontI{uit}
 \fi
-%% AJ1 ‚ÌŠeƒOƒŠƒt‚É‘Î‚µŠî–{ƒƒgƒŠƒbƒN‚ğæ“¾‚µo—Í‚·‚é
-%% \getMetricAj\<ƒtƒHƒ“ƒg>{<•\¦Ú“ª«>}
+%% AJ1 ã®å„ã‚°ãƒªãƒ•ã«å¯¾ã—åŸºæœ¬ãƒ¡ãƒˆãƒªãƒƒã‚¯ã‚’å–å¾—ã—å‡ºåŠ›ã™ã‚‹
+%% \getMetricAj\<ãƒ•ã‚©ãƒ³ãƒˆ>{<è¡¨ç¤ºæ¥é ­è¾>}
 \def\getMetricAj#1#2{%
   #1\def\pname{#2}\cntM=\XeTeXcountglyphs\font
   \let\do\doGetMetricAj \doForEachAj}
-\def\doGetMetricAj#1{%% {<Unicode’l>}
+\def\doGetMetricAj#1{%% {<Unicodeå€¤>}
   \cntC=#1
   \ifnum\cntC<\cntM
     \setbox\boxA=\hbox{\XeTeXglyph\cntC}%
@@ -1025,7 +1025,7 @@ sub query_xetex {
     \outData{\pname:#1:dp=\the\dp\boxA}%
   \fi}
 \getMetricAj\fontU{aj}
-%% ‚¨‚µ‚Ü‚¢
+%% ãŠã—ã¾ã„
 \bye
 END
   s/%%.*$/%/gm; s/\?FONT\?/$font/g;
@@ -1036,51 +1036,51 @@ END
 }
 
 # do_list($vals)
-# \do-ƒŠƒXƒg‚Ìì¬. $vals ‚Í”z—ñQÆ.
+# \do-ãƒªã‚¹ãƒˆã®ä½œæˆ. $vals ã¯é…åˆ—å‚ç…§.
 sub do_list {
   my ($vals) = @_;
   return join("%\n", map { "\\do{$_}" } (@$vals));
 }
 
 # derive_param($par)
-# XeTeX ‚Åæ“¾‚µ‚½ƒƒgƒŠƒbƒNî•ñ‚ğŠî‚É‚µ‚Ä, ”h¶ƒpƒ‰ƒƒ^(—á‚¦‚Î
-# x-ƒnƒCƒg‚Ì’l“™)‚ğ‹‚ß‚ÄƒnƒbƒVƒ…‚ÉŠi”[‚·‚é.
+# XeTeX ã§å–å¾—ã—ãŸãƒ¡ãƒˆãƒªãƒƒã‚¯æƒ…å ±ã‚’åŸºã«ã—ã¦, æ´¾ç”Ÿãƒ‘ãƒ©ãƒ¡ã‚¿(ä¾‹ãˆã°
+# x-ãƒã‚¤ãƒˆã®å€¤ç­‰)ã‚’æ±‚ã‚ã¦ãƒãƒƒã‚·ãƒ¥ã«æ ¼ç´ã™ã‚‹.
 sub derive_param {
   my ($par) = @_; my ($cc);
-  # xheight : x-ƒnƒCƒg(ÀÛ‚Ì 'x' ‚Ì‚‚³‚ğ—p‚¢‚é)
+  # xheight : x-ãƒã‚¤ãƒˆ(å®Ÿéš›ã® 'x' ã®é«˜ã•ã‚’ç”¨ã„ã‚‹)
   (defined($cc = ucs2aj(ord('x'))) &&
    defined($par->{xheight} = $par->{aj}{$cc}{ht}))
     or $par->{xheight} = 0.5;
-  # capheight : ƒLƒƒƒbƒvƒnƒCƒg(ÀÛ‚Ì 'I' ‚Ì‚‚³‚ğ—p‚¢‚é)
+  # capheight : ã‚­ãƒ£ãƒƒãƒ—ãƒã‚¤ãƒˆ(å®Ÿéš›ã® 'I' ã®é«˜ã•ã‚’ç”¨ã„ã‚‹)
   (defined($cc = ucs2aj(ord('I'))) &&
    defined($par->{capheight} = $par->{aj}{$cc}{ht}))
     or $par->{capheight} = 0.75;
-  # ascheight : ƒAƒZƒ“ƒ_ƒnƒCƒg(ÀÛ‚Ì 'h' ‚Ì‚‚³‚ğ—p‚¢‚é)
+  # ascheight : ã‚¢ã‚»ãƒ³ãƒ€ãƒã‚¤ãƒˆ(å®Ÿéš›ã® 'h' ã®é«˜ã•ã‚’ç”¨ã„ã‚‹)
   (defined($cc = ucs2aj(ord('h'))) &&
    defined($par->{ascheight} = $par->{aj}{$cc}{ht}))
     or $par->{ascheight} = 0.75;
-  # space : ‹ó”’•¶š‚Ì•
+  # space : ç©ºç™½æ–‡å­—ã®å¹…
   (defined($cc = ucs2aj(ord(' '))) &&
    defined($par->{space} = $par->{aj}{$cc}{wd}))
     or $par->{space} = 0.5;
-  # slant : ƒCƒ^ƒŠƒbƒN‚ÌƒXƒ‰ƒ“ƒg
+  # slant : ã‚¤ã‚¿ãƒªãƒƒã‚¯ã®ã‚¹ãƒ©ãƒ³ãƒˆ
   my ($slx, $sly) = ($par->{slantx}, $par->{slanty});
   $par->{slant} = (defined $slx && defined $sly && $sly > 0) ?
     ($slx / $sly) : $std_slant;
 }
 
 ##----------------------------------------------------------
-## TeX ƒƒgƒŠƒbƒNƒtƒ@ƒCƒ‹(TFM/VF/OFM)‚Ìì¬
+## TeX ãƒ¡ãƒˆãƒªãƒƒã‚¯ãƒ•ã‚¡ã‚¤ãƒ«(TFM/VF/OFM)ã®ä½œæˆ
 
-# uƒtƒ@ƒ~ƒŠ–¼v‚Í LaTeX ƒ\[ƒX“à‚Åƒtƒ@ƒ~ƒŠw’è‚É—p‚¢‚ç‚ê‚é•¶š—ñ‚Å
-# pxacid ‚Ì‘æ 1 ˆø”‚Åw’è‚³‚ê‚é.
-# uƒtƒ@ƒ~ƒŠ¯•Êqv‚ÍƒƒgƒŠƒbƒNƒtƒ@ƒCƒ‹‚Ì–½–¼‚É—p‚¢‚ç‚ê‚é•¶š—ñ‚Å
-# --tfm-family ‚Åw’è‚³‚ê‚é. (--tfm-family ‚ª‚È‚¢ê‡‚Íuƒtƒ@ƒ~ƒŠ–¼v
-# ‚Æ“¯‚¶‚É‚È‚é.)
+# ã€Œãƒ•ã‚¡ãƒŸãƒªåã€ã¯ LaTeX ã‚½ãƒ¼ã‚¹å†…ã§ãƒ•ã‚¡ãƒŸãƒªæŒ‡å®šã«ç”¨ã„ã‚‰ã‚Œã‚‹æ–‡å­—åˆ—ã§
+# pxacid ã®ç¬¬ 1 å¼•æ•°ã§æŒ‡å®šã•ã‚Œã‚‹.
+# ã€Œãƒ•ã‚¡ãƒŸãƒªè­˜åˆ¥å­ã€ã¯ãƒ¡ãƒˆãƒªãƒƒã‚¯ãƒ•ã‚¡ã‚¤ãƒ«ã®å‘½åã«ç”¨ã„ã‚‰ã‚Œã‚‹æ–‡å­—åˆ—ã§
+# --tfm-family ã§æŒ‡å®šã•ã‚Œã‚‹. (--tfm-family ãŒãªã„å ´åˆã¯ã€Œãƒ•ã‚¡ãƒŸãƒªåã€
+# ã¨åŒã˜ã«ãªã‚‹.)
 
 # source_opl($par, $fam)
-# AJ1 ƒGƒ“ƒR[ƒfƒBƒ“ƒO‚Ì OPL (‚±‚±‚©‚ç¶¬‚³‚ê‚é OFM ‚ª VF ‚ÌQÆæ‚Æ
-# ‚È‚é)‚ğì¬‚·‚é. $par ‚ÍƒƒgƒŠƒbƒNî•ñ, $fam ‚Íƒtƒ@ƒ~ƒŠ–¼.
+# AJ1 ã‚¨ãƒ³ã‚³ãƒ¼ãƒ‡ã‚£ãƒ³ã‚°ã® OPL (ã“ã“ã‹ã‚‰ç”Ÿæˆã•ã‚Œã‚‹ OFM ãŒ VF ã®å‚ç…§å…ˆã¨
+# ãªã‚‹)ã‚’ä½œæˆã™ã‚‹. $par ã¯ãƒ¡ãƒˆãƒªãƒƒã‚¯æƒ…å ±, $fam ã¯ãƒ•ã‚¡ãƒŸãƒªå.
 sub source_opl {
   my ($par, $fam) = @_;
   my @cnks = (<<"END");
@@ -1108,16 +1108,16 @@ END
   return join('', @cnks);
 }
 # source_virtual()
-# TeX ƒGƒ“ƒR[ƒfƒBƒ“ƒO—p‚Ì‰¼‘zƒtƒHƒ“ƒg‚Ì‚½‚ß‚Ìƒ\[ƒX(PL ‚Æ OVP)‚ğ
-# ¶¬‚·‚é. $par ‚ÍƒƒgƒŠƒbƒNî•ñ, $fam ‚Íƒtƒ@ƒ~ƒŠ–¼, $ser ‚ÍƒVƒŠ[ƒY
-# –¼, $shp ‚ÍƒVƒF[ƒv–¼, $enc ‚ÍƒGƒ“ƒR[ƒfƒBƒ“ƒO, $tfmfam ‚Íƒtƒ@ƒ~ƒŠ
-# ¯•Êq.
+# TeX ã‚¨ãƒ³ã‚³ãƒ¼ãƒ‡ã‚£ãƒ³ã‚°ç”¨ã®ä»®æƒ³ãƒ•ã‚©ãƒ³ãƒˆã®ãŸã‚ã®ã‚½ãƒ¼ã‚¹(PL ã¨ OVP)ã‚’
+# ç”Ÿæˆã™ã‚‹. $par ã¯ãƒ¡ãƒˆãƒªãƒƒã‚¯æƒ…å ±, $fam ã¯ãƒ•ã‚¡ãƒŸãƒªå, $ser ã¯ã‚·ãƒªãƒ¼ã‚º
+# å, $shp ã¯ã‚·ã‚§ãƒ¼ãƒ—å, $enc ã¯ã‚¨ãƒ³ã‚³ãƒ¼ãƒ‡ã‚£ãƒ³ã‚°, $tfmfam ã¯ãƒ•ã‚¡ãƒŸãƒª
+# è­˜åˆ¥å­.
 sub source_virtual {
   my ($par, $fam, $ser, $shp, $enc, $tfmfam) = @_;
   my $ctchar = 0; my $ctkern = 0;
   my $ital = ($shp eq 'it') ? 1 : 0;
 
-  # PL/OVP ‚Ì CHARACTER ‹Lq
+  # PL/OVP ã® CHARACTER è¨˜è¿°
   my (@pccnks, @vccnks, @valid);
   foreach my $tc (0 .. 255) {
     my @uc = tex2ucs($enc, $tc, $ital) or next;
@@ -1128,15 +1128,15 @@ sub source_virtual {
       $map = join("\n", map { "      $_" } (@$map));
       $map = "   (MAP\n$map\n      )";
     } else { $map = "   (MAP)"; }
-    # OVP ‹Lq: CHARHT, CHARDP ‚Í VF ‚É‚Í‹L‚³‚ê‚È‚¢‚Ì‚ÅÈ‚­
-    # (CHARWD ‚Íˆê‰‹L˜^‚³‚ê‚é‚ª, dvipdfmx ‚Å‚Íg‚í‚ê‚È‚¢)
+    # OVP è¨˜è¿°: CHARHT, CHARDP ã¯ VF ã«ã¯è¨˜ã•ã‚Œãªã„ã®ã§çœã
+    # (CHARWD ã¯ä¸€å¿œè¨˜éŒ²ã•ã‚Œã‚‹ãŒ, dvipdfmx ã§ã¯ä½¿ã‚ã‚Œãªã„)
     push(@vccnks, <<"END");
 (CHARACTER H @{[FH($tc)]}
    (CHARWD R @{[FR($wd)]})
 $map
    )
 END
-    # PL ‹Lq:
+    # PL è¨˜è¿°:
     push(@pccnks, <<"END");
 (CHARACTER H @{[FH($tc)]}
    (CHARWD R @{[FR($wd)]})
@@ -1146,13 +1146,13 @@ END
 END
   }
 
-  # ƒŠƒKƒ`ƒƒî•ñ‚ğƒnƒbƒVƒ…Œ`®‚É•ÏŠ·
+  # ãƒªã‚¬ãƒãƒ£æƒ…å ±ã‚’ãƒãƒƒã‚·ãƒ¥å½¢å¼ã«å¤‰æ›
   my %lig;
   foreach my $ent (@{$ligature_table->{$enc}}) {
     $lig{$ent->[0]}{$ent->[1]} = $ent->[2];
   }
 
-  # PL ‚Ì LIGTABLE ‹Lq
+  # PL ã® LIGTABLE è¨˜è¿°
   my @lkcnks = ();
   {
     my $parkern = $par->{($ital) ? 'uit' : 'uup'}{kern};
@@ -1186,8 +1186,8 @@ END
   info("character count = $ctchar");
   info("lig/kern count = $ctkern");
 
-  # OVP ‹Lq‚Ì‘S‘Ì
-  # FONTDIMEN w’è‚Í, ¶¬‚³‚ê‚é OFM ‚ğg‚í‚È‚¢‚Ì‚Å–³ˆÓ–¡
+  # OVP è¨˜è¿°ã®å…¨ä½“
+  # FONTDIMEN æŒ‡å®šã¯, ç”Ÿæˆã•ã‚Œã‚‹ OFM ã‚’ä½¿ã‚ãªã„ã®ã§ç„¡æ„å‘³
   my $shp1 = ($shp eq 'sl') ? 'sl' : 'n';
   my $ofmname = fontname($tfmfam, $ser, $shp1, 'J40');
   my $ovp = join('', <<"END", @vccnks);
@@ -1203,7 +1203,7 @@ END
    )
 END
 
-  # PL ‹Lq‚Ì‘S‘Ì
+  # PL è¨˜è¿°ã®å…¨ä½“
   my $space = $par->{space};
   my $xheight = $par->{xheight};
   my $slant = ($shp eq 'it') ? $par->{slant} : 
@@ -1224,7 +1224,7 @@ END1
    )
 END2
 
-  # Œ‹‰Ê‚ÌƒeƒLƒXƒg‚ğ•Ô‚·
+  # çµæœã®ãƒ†ã‚­ã‚¹ãƒˆã‚’è¿”ã™
   return ($pl, $ovp);
 }
 
@@ -1238,22 +1238,22 @@ sub resolve_map {
       return [ [ "(SETCHAR H @{[FH($cc)]})" ],
                $t->{wd}, $t->{ht}, $t->{dp} ];
     } elsif ($uc->{type} == XNAV) {
-      # AJ1 ‚É‘Î‰‚µ‚È‚¢•¶š
+      # AJ1 ã«å¯¾å¿œã—ãªã„æ–‡å­—
       return;
     } elsif ($uc->{type} == XCWM) {
-      # CWM: x-ƒnƒCƒg‚Ì compound-word mark
+      # CWM: x-ãƒã‚¤ãƒˆã® compound-word mark
       return [ ["(MOVERIGHT R 0.0)"],
                0, $par->{xheight}, 0 ];
     } elsif ($uc->{type} == XCWC) {
-      # CWC: ƒLƒƒƒbƒvƒnƒCƒg‚Ì compound-word mark
+      # CWC: ã‚­ãƒ£ãƒƒãƒ—ãƒã‚¤ãƒˆã® compound-word mark
       return [ ["(MOVERIGHT R 0.0)"],
                0, $par->{capheight}, 0 ];
     } elsif ($uc->{type} == XCWA) {
-      # CWA: ƒAƒZƒ“ƒ_ƒnƒCƒg‚Ì compound-word mark
+      # CWA: ã‚¢ã‚»ãƒ³ãƒ€ãƒã‚¤ãƒˆã® compound-word mark
       return [ ["(MOVERIGHT R 0.0)"],
                0, $par->{ascheight}, 0 ];
     } elsif ($uc->{type} == XACC) {
-      # ACC: \accent ‚Æ“¯‚¶ˆ—‚Å‡¬
+      # ACC: \accent ã¨åŒã˜å‡¦ç†ã§åˆæˆ
       my $cc1 = ucs2aj($uc->{arg}[0], $ital) or next;
       my $cc2 = ucs2aj($uc->{arg}[1], $ital) or next;
       my $par1 = $paraj->{$cc1} or next;
@@ -1275,7 +1275,7 @@ sub resolve_map {
       }
       return [ \@map, $par2->{wd}, $par2->{ht}, $par2->{dp} ];
     } elsif ($uc->{type} == XBLW) {
-      # BLW: ’Pƒ‚Éd‚Ë‚Ä‡¬
+      # BLW: å˜ç´”ã«é‡ã­ã¦åˆæˆ
       my $cc1 = ucs2aj($uc->{arg}[0], $ital) or next;
       my $cc2 = ucs2aj($uc->{arg}[1], $ital) or next;
       my $par1 = $paraj->{$cc1} or next;
@@ -1288,7 +1288,7 @@ sub resolve_map {
       );
       return [ \@map, $par2->{wd}, $par2->{ht}, $par2->{dp} ];
     } elsif ($uc->{type} == XLIN) {
-      # LIN: ’Pƒ‚É•À‚×‚Ä‡¬
+      # LIN: å˜ç´”ã«ä¸¦ã¹ã¦åˆæˆ
       my $cc1 = ucs2aj($uc->{arg}[0], $ital) or next;
       my $cc2 = ucs2aj($uc->{arg}[1], $ital) or next;
       my $par1 = $paraj->{$cc1} or next;
@@ -1306,7 +1306,7 @@ sub resolve_map {
                max($par1->{dp}, $par2->{dp}) ];
     }
   }
-  # ¡‚ÌƒtƒHƒ“ƒg‚Å‚Íg‚¦‚È‚¢ê‡
+  # ä»Šã®ãƒ•ã‚©ãƒ³ãƒˆã§ã¯ä½¿ãˆãªã„å ´åˆ
   return;
 }
 
@@ -1320,27 +1320,27 @@ sub FH {
 }
 
 # use_berry($sw)
-# Berry ‹K‘¥‚ğg‚¤‚©‚ğw’è. $sw ‚Íƒu[ƒ‹’l.
-# ‚¿‚È‚İ‚ÉŠù’è‚Ì–½–¼‚ÍuZR‹K‘¥v‚Å‚ ‚é ;-)
+# Berry è¦å‰‡ã‚’ä½¿ã†ã‹ã‚’æŒ‡å®š. $sw ã¯ãƒ–ãƒ¼ãƒ«å€¤.
+# ã¡ãªã¿ã«æ—¢å®šã®å‘½åã¯ã€ŒZRè¦å‰‡ã€ã§ã‚ã‚‹ ;-)
 our $use_berry = 0;
 sub use_berry { $use_berry = $_[0]; }
 
-# NFSS ƒVƒŠ[ƒY–¼ ¨ Berry ‹K‘¥¯•Êq
+# NFSS ã‚·ãƒªãƒ¼ã‚ºå â†’ Berry è¦å‰‡è­˜åˆ¥å­
 our $ser_kb = {
   l => 'l', m => 'r', b => 'b', bx => 'b', eb => 'x'
 };
-# NFSS ƒVƒF[ƒv–¼ ¨ Berry ‹K‘¥¯•Êq
+# NFSS ã‚·ã‚§ãƒ¼ãƒ—å â†’ Berry è¦å‰‡è­˜åˆ¥å­
 our $shp_kb = {
   n => '', it => 'i', sl => 'o'
 };
-# LaTeX ƒGƒ“ƒR[ƒfƒBƒ“ƒO–¼ ¨ Berry ‹K‘¥¯•Êq
+# LaTeX ã‚¨ãƒ³ã‚³ãƒ¼ãƒ‡ã‚£ãƒ³ã‚°å â†’ Berry è¦å‰‡è­˜åˆ¥å­
 our $enc_kb = {
   'OT1' => '7t', 'T1' => '8t', 'TS1' => '8c', 'LY1' => '8y',
-  'J40' => 'aj', # 'J40' ‚Í AJ1 ‚Ì‚±‚Æ
+  'J40' => 'aj', # 'J40' ã¯ AJ1 ã®ã“ã¨
 };
 # fontname($tfmfam, $ser, $shp, $enc)
-# w’è‚Ì‘®«‚É‘Î‚·‚éƒtƒHƒ“ƒg–¼‚ğ•Ô‚·. $tfmfam ‚Íƒtƒ@ƒ~ƒŠ¯•Êq, $ser
-# ‚ÍƒVƒŠ[ƒY–¼, $shp ‚ÍƒVƒF[ƒv–¼, $enc ‚ÍƒGƒ“ƒR[ƒfƒBƒ“ƒO–¼.
+# æŒ‡å®šã®å±æ€§ã«å¯¾ã™ã‚‹ãƒ•ã‚©ãƒ³ãƒˆåã‚’è¿”ã™. $tfmfam ã¯ãƒ•ã‚¡ãƒŸãƒªè­˜åˆ¥å­, $ser
+# ã¯ã‚·ãƒªãƒ¼ã‚ºå, $shp ã¯ã‚·ã‚§ãƒ¼ãƒ—å, $enc ã¯ã‚¨ãƒ³ã‚³ãƒ¼ãƒ‡ã‚£ãƒ³ã‚°å.
 sub fontname {
   my ($tfmfam, $ser, $shp, $enc) = @_;
   $shp = $shp_kb->{$shp};
@@ -1355,17 +1355,17 @@ sub fontname {
 }
 
 ##----------------------------------------------------------
-## LaTeX ƒtƒHƒ“ƒg’è‹`ƒtƒ@ƒCƒ‹‚Ì¶¬
+## LaTeX ãƒ•ã‚©ãƒ³ãƒˆå®šç¾©ãƒ•ã‚¡ã‚¤ãƒ«ã®ç”Ÿæˆ
 
 # source_fd($fam, $ser, $enc, $tfmfam, $orgsrc)
-# $fam ‚Íƒtƒ@ƒ~ƒŠ, $ser ‚ÍƒVƒŠ[ƒY, $enc ‚ÍƒGƒ“ƒR[ƒfƒBƒ“ƒO, $tfmfam
-# ‚ÍƒtƒHƒ“ƒg–¼’†‚Ìƒtƒ@ƒ~ƒŠ¯•Êq, $orgsrc ‚ÍXV‘O‚Ì’è‹`ƒtƒ@ƒCƒ‹
-# ‚Ì“à—e(’Ç‰Áƒ‚[ƒh‚Å‚È‚¢ê‡‚Í‹ó).
+# $fam ã¯ãƒ•ã‚¡ãƒŸãƒª, $ser ã¯ã‚·ãƒªãƒ¼ã‚º, $enc ã¯ã‚¨ãƒ³ã‚³ãƒ¼ãƒ‡ã‚£ãƒ³ã‚°, $tfmfam
+# ã¯ãƒ•ã‚©ãƒ³ãƒˆåä¸­ã®ãƒ•ã‚¡ãƒŸãƒªè­˜åˆ¥å­, $orgsrc ã¯æ›´æ–°å‰ã®å®šç¾©ãƒ•ã‚¡ã‚¤ãƒ«
+# ã®å†…å®¹(è¿½åŠ ãƒ¢ãƒ¼ãƒ‰ã§ãªã„å ´åˆã¯ç©º).
 sub source_fd {
   my ($fam, $ser, $enc, $tfmfam, $orgsrc) = @_;
-  # $spec{ser}{shp} ‚ÍŒ»İ‚Ì ser/shp ‚É‘Î‚·‚éƒtƒHƒ“ƒgŠ„“–‚ğ•\‚·.
-  # ‚½‚¾‚µ‘ã‘Ö(ssub*)‚Ì‚à‚Ì‚Í–¾¦ undef ‚ğ“ü‚ê‚Ä‚¢‚é.
-  # @pos ‚Íİ’è‚Ì‡˜‚ğ‹L˜^‚µ‚Ä‚¢‚é.
+  # $spec{ser}{shp} ã¯ç¾åœ¨ã® ser/shp ã«å¯¾ã™ã‚‹ãƒ•ã‚©ãƒ³ãƒˆå‰²å½“ã‚’è¡¨ã™.
+  # ãŸã ã—ä»£æ›¿(ssub*)ã®ã‚‚ã®ã¯æ˜ç¤º undef ã‚’å…¥ã‚Œã¦ã„ã‚‹.
+  # @pos ã¯è¨­å®šã®é †åºã‚’è¨˜éŒ²ã—ã¦ã„ã‚‹.
   my (%spec, @pos, $ser1, $shp1, $text);
   my $rx = qr/^\\DeclareFontShape\{$enc\}\{$fam\}
               \{(\w+)\}\{(\w+)\}\{<->(.*?)\}/x;
@@ -1375,8 +1375,8 @@ sub source_fd {
       $spec{"$ser1/$shp1"} = ($text =~ m/^ssub\*/) ? undef : $text;
     }
   }
-  # Œ»İ—LŒø‚Èİ’è‚ª‚È‚¢ê‡‚É‚ÍŠù’è‚Ì‰Šú’l‚ğ—^‚¦‚é
-  # (m,b,bx ƒVƒŠ[ƒY‚Æ n,it,sl ƒVƒF[ƒv‚Ì‘g‚İ‡‚í‚¹)
+  # ç¾åœ¨æœ‰åŠ¹ãªè¨­å®šãŒãªã„å ´åˆã«ã¯æ—¢å®šã®åˆæœŸå€¤ã‚’ä¸ãˆã‚‹
+  # (m,b,bx ã‚·ãƒªãƒ¼ã‚ºã¨ n,it,sl ã‚·ã‚§ãƒ¼ãƒ—ã®çµ„ã¿åˆã‚ã›)
   if (!@pos) {
     foreach $ser1 ('m', 'b', 'bx') {
       foreach $shp1 ('n', 'it', 'sl') {
@@ -1384,7 +1384,7 @@ sub source_fd {
       }
     }
   }
-  # V‚µ‚¢ƒVƒŠ[ƒY‚ğ’Ç‰Á
+  # æ–°ã—ã„ã‚·ãƒªãƒ¼ã‚ºã‚’è¿½åŠ 
   foreach $shp1 ('n', 'it', 'sl') {
     if (!exists $spec{"$ser/$shp1"}) { push(@pos, "$ser/$shp1"); }
     $spec{"$ser/$shp1"} = fontname($tfmfam, $ser, $shp1, $enc);
@@ -1395,21 +1395,21 @@ sub source_fd {
 #    info("$ser1/$shp1=" . $spec{$ent});
 #  }
 #  $ser1 = <STDIN>;
-  # ƒ{[ƒ‹ƒh(b‚Ü‚½‚Íbx)‚ÌƒtƒHƒ“ƒg‚ª‘¶İ‚·‚é‚©‚ğŒŸ¸.
+  # ãƒœãƒ¼ãƒ«ãƒ‰(bã¾ãŸã¯bx)ã®ãƒ•ã‚©ãƒ³ãƒˆãŒå­˜åœ¨ã™ã‚‹ã‹ã‚’æ¤œæŸ».
   my $bfser;
   foreach my $ent (@pos) {
     (defined $spec{$ent}) or next;
     if ($ent =~ m|^bx?/|) { $bfser = 1; }
   }
-  # ˆÈã‚Ìî•ñ‚©‚çV‚µ‚¢ .fd ‚Ì“à—e‚ğŒˆ’è‚·‚é.
+  # ä»¥ä¸Šã®æƒ…å ±ã‹ã‚‰æ–°ã—ã„ .fd ã®å†…å®¹ã‚’æ±ºå®šã™ã‚‹.
   my (@cnks, $text);
   foreach my $ent (@pos) {
     ($ser1, $shp1) = $ent =~ m|^(.*)/(.*)$| or die;
     if (defined $spec{$ent}) {
       $text = $spec{$ent};
     } else {
-      # ƒVƒŠ[ƒY‚Ì‘ã‘Ö: b‚Æbx‚Ìˆê•û‚Ì‚İ‚ª‚ ‚éê‡‚Í, ‘¼•û‚ğ‚»‚ê‚Å‘ã‘Ö.
-      # m‚ª‚È‚¢ê‡‚Í¡’Ç‰Á‚µ‚½ƒVƒŠ[ƒY‚Å‘ã‘Ö. ‚»‚êˆÈŠO‚Ím‚Å‘ã‘Ö.
+      # ã‚·ãƒªãƒ¼ã‚ºã®ä»£æ›¿: bã¨bxã®ä¸€æ–¹ã®ã¿ãŒã‚ã‚‹å ´åˆã¯, ä»–æ–¹ã‚’ãã‚Œã§ä»£æ›¿.
+      # mãŒãªã„å ´åˆã¯ä»Šè¿½åŠ ã—ãŸã‚·ãƒªãƒ¼ã‚ºã§ä»£æ›¿. ãã‚Œä»¥å¤–ã¯mã§ä»£æ›¿.
       my $ser2 = ($ser1 eq 'm') ? $ser :
                  ($bfser && $ser1 eq 'b') ? 'bx' :
                  ($bfser && $ser1 eq 'bx') ? 'b' : 'm';
@@ -1430,12 +1430,12 @@ END
 }
 
 ##----------------------------------------------------------
-## dvipdfmx—p‚Ìƒ}ƒbƒvƒtƒ@ƒCƒ‹ì¬
+## dvipdfmxç”¨ã®ãƒãƒƒãƒ—ãƒ•ã‚¡ã‚¤ãƒ«ä½œæˆ
 
 # source_map($fam, $ser, $tfmfam, $font, $orgsrc)
-# $fam ‚Íƒtƒ@ƒ~ƒŠ, $ser ‚ÍƒVƒŠ[ƒY, $tfmfam ‚ÍƒtƒHƒ“ƒg–¼’†‚Ìƒtƒ@ƒ~ƒŠ
-# ¯•Êq, $font ‚ÍƒtƒHƒ“ƒgƒtƒ@ƒCƒ‹–¼, $orgsrc ‚ÍXV‘O‚Ìƒ}ƒbƒvƒtƒ@ƒCƒ‹
-# ‚Ì“à—e(’Ç‰Áƒ‚[ƒh‚Å‚È‚¢ê‡‚Í‹ó).
+# $fam ã¯ãƒ•ã‚¡ãƒŸãƒª, $ser ã¯ã‚·ãƒªãƒ¼ã‚º, $tfmfam ã¯ãƒ•ã‚©ãƒ³ãƒˆåä¸­ã®ãƒ•ã‚¡ãƒŸãƒª
+# è­˜åˆ¥å­, $font ã¯ãƒ•ã‚©ãƒ³ãƒˆãƒ•ã‚¡ã‚¤ãƒ«å, $orgsrc ã¯æ›´æ–°å‰ã®ãƒãƒƒãƒ—ãƒ•ã‚¡ã‚¤ãƒ«
+# ã®å†…å®¹(è¿½åŠ ãƒ¢ãƒ¼ãƒ‰ã§ãªã„å ´åˆã¯ç©º).
 sub source_map {
   my ($fam, $ser, $tfmfam, $font, $orgsrc) = @_;
   my @spec;
@@ -1457,7 +1457,7 @@ END
 }
 
 ##----------------------------------------------------------
-## LaTeX ƒXƒ^ƒCƒ‹ƒtƒ@ƒCƒ‹
+## LaTeX ã‚¹ã‚¿ã‚¤ãƒ«ãƒ•ã‚¡ã‚¤ãƒ«
 
 # source_style($font)
 sub source_style {
@@ -1520,24 +1520,24 @@ END
 }
 
 ##----------------------------------------------------------
-## ƒƒCƒ“
+## ãƒ¡ã‚¤ãƒ³
 
 # append_mode($value)
-# ’Ç‰Áƒ‚[ƒh‚ğ $value (^‹U’l)‚Éİ’è‚·‚é.
+# è¿½åŠ ãƒ¢ãƒ¼ãƒ‰ã‚’ $value (çœŸå½å€¤)ã«è¨­å®šã™ã‚‹.
 our $append_mode;
 sub append_mode { $append_mode = $_[0]; }
 
 # save_source($value)
-# ƒ\[ƒX•Û‘¶ƒ‚[ƒh‚ğ $value (^‹U’l)‚Éİ’è‚·‚é.
+# ã‚½ãƒ¼ã‚¹ä¿å­˜ãƒ¢ãƒ¼ãƒ‰ã‚’ $value (çœŸå½å€¤)ã«è¨­å®šã™ã‚‹.
 our $save_source;
 sub save_source { $save_source = $_[0]; }
 
 # generate($font, $fam, $enclist)
 sub generate {
   my ($font, $fam, $ser, $tfmfam) = @_;
-  # XeTeX ‚ğ—p‚¢‚ÄƒƒgƒŠƒbƒNî•ñ‚ğ“¾‚é
+  # XeTeX ã‚’ç”¨ã„ã¦ãƒ¡ãƒˆãƒªãƒƒã‚¯æƒ…å ±ã‚’å¾—ã‚‹
   my $par = get_metric($font, $target_ucs);
-  # AJ1 ‚Ì OFM ‚ğì¬
+  # AJ1 ã® OFM ã‚’ä½œæˆ
   my $ofmname = fontname($tfmfam, $ser, 'n', 'J40');
   info("Process for $ofmname...");
   write_whole("$ofmname.opl", source_opl($par, $fam), 1);
@@ -1545,12 +1545,12 @@ sub generate {
   (-s "$ofmname.ofm")
     or error("failed in converting OPL -> OFM", "$ofmname.ofm");
   if (!$save_source) { unlink("$ofmname.opl"); }
-  # ƒXƒ‰ƒ“ƒg—p‚É OFM ‚ğƒRƒs[
+  # ã‚¹ãƒ©ãƒ³ãƒˆç”¨ã« OFM ã‚’ã‚³ãƒ”ãƒ¼
   my $slofmname = fontname($tfmfam, $ser, 'sl', 'J40');
   write_whole("$slofmname.ofm", read_whole("$ofmname.ofm", 1), 1);
-  # ŠeƒGƒ“ƒR[ƒfƒBƒ“ƒO‚Ì‰¼‘zƒtƒHƒ“ƒg‚ğì¬
+  # å„ã‚¨ãƒ³ã‚³ãƒ¼ãƒ‡ã‚£ãƒ³ã‚°ã®ä»®æƒ³ãƒ•ã‚©ãƒ³ãƒˆã‚’ä½œæˆ
   foreach my $enc ('OT1', 'T1', 'LY1', 'TS1') {
-    # ŠeƒVƒF[ƒv‚²‚Æ‚Ìˆ—
+    # å„ã‚·ã‚§ãƒ¼ãƒ—ã”ã¨ã®å‡¦ç†
     foreach my $shp ('n', 'it', 'sl') {
       my $vfname = fontname($tfmfam, $ser, $shp, $enc);
       info("Process for $vfname...");
@@ -1561,14 +1561,14 @@ sub generate {
       (-s "$vfname.tfm")
         or error("failed in converting PL -> TFM", "$vfname.tfm");
       write_whole("$vfname.ovp", $ovp, 1);
-      # ‚±‚±‚Å¶¬‚³‚ê‚é OVF ‚ğ VF ‚Æ‚µ‚Äg‚¤. OFM ‚ÍÌ‚Ä‚é.
+      # ã“ã“ã§ç”Ÿæˆã•ã‚Œã‚‹ OVF ã‚’ VF ã¨ã—ã¦ä½¿ã†. OFM ã¯æ¨ã¦ã‚‹.
       system("$ovp2ovf $vfname.ovp $vfname.ovf $temp_base.ofm");
       unlink("$vfname.vf"); rename("$vfname.ovf", "$vfname.vf");
       (-s "$vfname.vf")
         or error("failed in converting OPL -> VF", "$vfname.vf");
       if (!$save_source) { unlink("$vfname.pl", "$vfname.ovp"); }
     }
-    # ƒtƒHƒ“ƒg’è‹`ƒtƒ@ƒCƒ‹
+    # ãƒ•ã‚©ãƒ³ãƒˆå®šç¾©ãƒ•ã‚¡ã‚¤ãƒ«
     my $fdname = lc("$enc$fam"); my $orgfd;
     if ($append_mode && -f "$fdname.fd") {
       $orgfd = read_whole("$fdname.fd");
@@ -1576,14 +1576,14 @@ sub generate {
     my $fd = source_fd($fam, $ser, $enc, $tfmfam, $orgfd);
     write_whole("$fdname.fd", $fd);
   }
-  # dvipdfmx ƒ}ƒbƒvƒtƒ@ƒCƒ‹
+  # dvipdfmx ãƒãƒƒãƒ—ãƒ•ã‚¡ã‚¤ãƒ«
   my $mapname = "pdfm-$fam"; my $orgmap;
   if ($append_mode && -f "$mapname.map") {
     $orgmap = read_whole("$mapname.map");
   }
   my $map = source_map($fam, $ser, $tfmfam, $font, $orgmap);
   write_whole("$mapname.map", $map);
-  # LaTeX ƒXƒ^ƒCƒ‹ƒtƒ@ƒCƒ‹
+  # LaTeX ã‚¹ã‚¿ã‚¤ãƒ«ãƒ•ã‚¡ã‚¤ãƒ«
   my $styname = "pxacid-$fam";
   my $sty = source_style($fam);
   if (!$append_mode) { write_whole("$styname.sty", $sty); }
@@ -1595,7 +1595,7 @@ sub generate {
 #-----------------------------------------------------------
 
 # main()
-# ƒƒCƒ“ƒvƒƒV[ƒWƒƒ.
+# ãƒ¡ã‚¤ãƒ³ãƒ—ãƒ­ã‚·ãƒ¼ã‚¸ãƒ£.
 sub main {
   my $prop = read_option();
   (defined $prop->{min_kern}) and $min_kern = $prop->{min_kern};
@@ -1611,7 +1611,7 @@ sub main {
 }
 
 # read_option()
-# ƒRƒ}ƒ“ƒhƒ‰ƒCƒ“‚ğ‰ğß‚·‚é. Œ‹‰Ê‚Í1‚Â‚ÌƒnƒbƒVƒ…QÆ‚Æ‚µ‚Ä•Ô‚³‚ê‚é.
+# ã‚³ãƒãƒ³ãƒ‰ãƒ©ã‚¤ãƒ³ã‚’è§£é‡ˆã™ã‚‹. çµæœã¯1ã¤ã®ãƒãƒƒã‚·ãƒ¥å‚ç…§ã¨ã—ã¦è¿”ã•ã‚Œã‚‹.
 sub read_option {
   my $prop = {};
   if (!@ARGV) { show_usage(); exit; }
@@ -1662,7 +1662,7 @@ sub read_option {
 }
 
 # show_usage()
-# g—p–@‚Ì•\¦.
+# ä½¿ç”¨æ³•ã®è¡¨ç¤º.
 sub show_usage {
   print <<"END";
 This is $prog_name v$version <$mod_date> by 'ZR'.
@@ -1683,20 +1683,20 @@ END
 }
 
 # info($msg, ...)
-# ƒƒbƒZ[ƒW‚ğ•\¦.
+# ãƒ¡ãƒƒã‚»ãƒ¼ã‚¸ã‚’è¡¨ç¤º.
 sub info {
   print STDERR (join(": ", $prog_name, @_), "\n");
 }
 
 # error($msg, ...)
-# ƒƒbƒZ[ƒW‚ğ•\¦‚µ‚ÄƒGƒ‰[I—¹‚·‚é.
+# ãƒ¡ãƒƒã‚»ãƒ¼ã‚¸ã‚’è¡¨ç¤ºã—ã¦ã‚¨ãƒ©ãƒ¼çµ‚äº†ã™ã‚‹.
 sub error {
   print STDERR (join(": ", $prog_name, @_), "\n");
   exit(-1);
 }
 
 # max($x, $y)
-# $x ‚Æ $y ‚Ì‚¤‚¿‘å‚«‚¢•û‚ğ•Ô‚·.
+# $x ã¨ $y ã®ã†ã¡å¤§ãã„æ–¹ã‚’è¿”ã™.
 sub max {
   return ($_[0] > $_[1]) ? $_[0] : $_[1];
 }
@@ -1706,8 +1706,8 @@ our $save_log;
 sub save_log { $save_log = $_[0]; }
 
 # write_whole($name, $dat, $bin)
-# $name ‚Ì–¼‚Ìƒtƒ@ƒCƒ‹‚É•¶š—ñ $dat ‚Ì“à—e‚ğ‘‚«o‚·. ^‹U’l
-# $bin ‚ÍƒoƒCƒiƒŠƒ‚[ƒhİ’è.
+# $name ã®åã®ãƒ•ã‚¡ã‚¤ãƒ«ã«æ–‡å­—åˆ— $dat ã®å†…å®¹ã‚’æ›¸ãå‡ºã™. çœŸå½å€¤
+# $bin ã¯ãƒã‚¤ãƒŠãƒªãƒ¢ãƒ¼ãƒ‰è¨­å®š.
 sub write_whole {
   my ($name, $dat, $bin) = @_;
   open(my $ho, '>', $name)
@@ -1718,8 +1718,8 @@ sub write_whole {
 }
 
 # read_whole($name, $bin)
-# $name ‚Ì–¼‚Ìƒtƒ@ƒCƒ‹‚Ì“à—e‚ğ•¶š—ñ‚Æ‚µ‚Ä•Ô‚·. ^‹U’l $bin ‚Í
-# ƒoƒCƒiƒŠƒ‚[ƒhİ’è.
+# $name ã®åã®ãƒ•ã‚¡ã‚¤ãƒ«ã®å†…å®¹ã‚’æ–‡å­—åˆ—ã¨ã—ã¦è¿”ã™. çœŸå½å€¤ $bin ã¯
+# ãƒã‚¤ãƒŠãƒªãƒ¢ãƒ¼ãƒ‰è¨­å®š.
 sub read_whole {
   my ($name, $bin) = @_; local ($/);
   open(my $hi, '<', $name)
@@ -1730,13 +1730,13 @@ sub read_whole {
   return $dat;
 }
 
-# I—¹‚ÉÀs‚³‚ê‚éˆ—.
+# çµ‚äº†æ™‚ã«å®Ÿè¡Œã•ã‚Œã‚‹å‡¦ç†.
 END {
   if ($save_log) {
     unlink("$prog_name-save.log");
     rename("$temp_base.log", "$prog_name-save.log");
   }
-  # ˆêƒtƒ@ƒCƒ‹‚ÌÁ‹
+  # ä¸€æ™‚ãƒ•ã‚¡ã‚¤ãƒ«ã®æ¶ˆå»
   unlink("$temp_base.tex", "$temp_base.log", "$temp_base.ofm");
 }
 
