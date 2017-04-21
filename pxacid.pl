@@ -861,14 +861,14 @@ sub to_italic {
 ##----------------------------------------------------------
 ## フォントのメトリックデータを XeTeX を用いて取得する
 
-# get_metric($font, $chars)
+# get_metric($font, $index, $chars)
 # フォント $font のメトリック情報を XeTeX を用いて取得し, ハッシュに
 # 格納して返す. $chars は対象とする Unicode 文字のリスト(今は常に
 # $target_ucs を指定している).
 sub get_metric {
-  my ($font, $chars) = @_;
+  my ($font, $index, $chars) = @_;
   # TeXプログラムをファイルに書き出して XeTeX 実行
-  write_whole("$temp_base.tex", query_xetex($font, $chars), 1);
+  write_whole("$temp_base.tex", query_xetex($font, $index, $chars), 1);
   if (-s "$prog_name-save.log") {
     my $t = read_whole("$prog_name-save.log", 1);
     write_whole("$temp_base.log", $t, 1);
@@ -919,10 +919,11 @@ sub nest_assign_sub {
   }
 }
 
-# query_xetex($font, $chars)
+# query_xetex($font, $index, $chars)
 # get_metric() で用いる XeTeX ソースの内容.
 sub query_xetex {
-  my ($font, $chars) = @_; my ($t);
+  my ($font, $index, $chars) = @_; my ($t);
+  (defined $index) and $font = "$font:$index";
   local $_ = <<'END';
 %% フォント定義
 \font\fontU="[?FONT?]:-liga,+kern"
@@ -1453,12 +1454,13 @@ END
 ##----------------------------------------------------------
 ## dvipdfmx用のマップファイル作成
 
-# source_map($fam, $ser, $tfmfam, $font, $orgsrc)
+# source_map($fam, $ser, $tfmfam, $font, $index, $orgsrc)
 # $fam はファミリ, $ser はシリーズ, $tfmfam はフォント名中のファミリ
 # 識別子, $font はフォントファイル名, $orgsrc は更新前のマップファイル
 # の内容(追加モードでない場合は空).
 sub source_map {
-  my ($fam, $ser, $tfmfam, $font, $orgsrc) = @_;
+  my ($fam, $ser, $tfmfam, $font, $index, $orgsrc) = @_;
+  (defined $index) and $font = ":$index:$font";
   my @spec;
   foreach my $lin (split(m/\n/, $orgsrc)) {
     if ($lin !~ m/^\s*(\#|$)/) {
@@ -1561,9 +1563,9 @@ sub save_source { $save_source = $_[0]; }
 
 # generate($font, $fam, $enclist)
 sub generate {
-  my ($font, $fam, $ser, $tfmfam) = @_;
+  my ($font, $fam, $ser, $tfmfam, $index) = @_;
   # XeTeX を用いてメトリック情報を得る
-  my $par = get_metric($font, $target_ucs);
+  my $par = get_metric($font, $index, $target_ucs);
   # AJ1 の OFM を作成
   my $ofmname = fontname($tfmfam, $ser, 'n', 'J40');
   info("Process for $ofmname...");
@@ -1608,7 +1610,7 @@ sub generate {
   if ($append_mode && -f "$mapname.map") {
     $orgmap = read_whole("$mapname.map");
   }
-  my $map = source_map($fam, $ser, $tfmfam, $font, $orgmap);
+  my $map = source_map($fam, $ser, $tfmfam, $font, $index, $orgmap);
   write_whole("$mapname.map", $map);
   # LaTeX スタイルファイル
   my $styname = "pxacid-$fam";
@@ -1635,7 +1637,7 @@ sub main {
   save_log($prop->{save_log});
   gen_target_list();
   generate($prop->{font}, $prop->{family}, $prop->{series},
-    $prop->{tfm_family});
+    $prop->{tfm_family}, $prop->{index});
 }
 
 # read_option()
@@ -1657,23 +1659,27 @@ sub read_option {
       $prop->{save_log} = 1;
     } elsif ($opt eq '--scale') {
       $prop->{scale} = 1;
-    } elsif (($arg) = $opt =~ m/^-(?:t|-tfm-family)(?:=(.*))?/) {
+    } elsif (($arg) = $opt =~ m/^-(?:t|-tfm-family)(?:=(.*))?$/) {
       (defined $arg) or $arg = shift(@ARGV);
       ($arg =~ m/^[a-z0-9]+$/) or error("bad family name", $arg);
       $prop->{tfm_family} = $arg;
-    } elsif (($arg) = $opt =~ m/^--min-kern(?:=(.*))?/) {
+    } elsif (($arg) = $opt =~ m/^--min-kern(?:=(.*))?$/) {
       (defined $arg) or $arg = shift(@ARGV);
       ($arg =~ m/^[.0-9]+$/) or error("bad min-kern value", $arg);
       $prop->{min_kern} = $arg;
-    } elsif (($arg) = $opt =~ m/^--slant(?:=(.*))?/) {
+    } elsif (($arg) = $opt =~ m/^--slant(?:=(.*))?$/) {
       (defined $arg) or $arg = shift(@ARGV);
       ($arg =~ m/^[.0-9]+$/ && 0 <= $arg && $arg <= 1)
         or error("bad slant value", $arg);
       $prop->{std_slant} = $arg;
-    } elsif (($arg) = $opt =~ m/^--gid-offset(?:=(.*))?/) {
+    } elsif (($arg) = $opt =~ m/^--gid-offset(?:=(.*))?$/) {
       (defined $arg) or $arg = shift(@ARGV);
       ($arg =~ m/^[0-9]+$/) or error("bad gid-offset value", $arg);
       $prop->{gid_offset} = $arg;
+    } elsif (($arg) = $opt =~ m/^-(?:i|-index)(?:=(.*))?$/) {
+      (defined $arg) or $arg = shift(@ARGV);
+      ($arg =~ m/^[0-9]+$/) or error("bad TTC index value", $arg);
+      $prop->{index} = $arg;
     } else {
       error("invalid option", $opt);
     }
@@ -1705,6 +1711,7 @@ Options are:
   -a / --append             append mode (for .fd & .map)
   -b / --use-berry          use Berry naming scheme
   -t / --tfm-family=<name>  font family name used in tfm names
+  -i / --index=<val>        TTC/OTC font index number
   -s / --save-source        save PL/OPL/OVP files
        --min-kern=<val>     minimum kern to be employed
        --slant=<val>        slant value
