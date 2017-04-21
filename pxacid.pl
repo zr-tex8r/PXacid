@@ -1437,11 +1437,8 @@ sub source_fd {
   $text = join("\n", @cnks);
   # 
   my $preamble = ($scale) ? <<'END' : '';
-\expandafter\ifx\csname ?FAM?@scale\endcsname\relax
-  \let\?FAM?@@scale\@empty
-\else
-  \edef\?FAM?@@scale{s*[\csname ?FAM?@scale\endcsname]}%
-\fi
+\edef\?FAM?@@scale{\expandafter\ifx\csname ?FAM?@scale\endcsname\relax
+  \else s*[\?FAM?@scale]\fi}
 END
   $preamble =~ s/\?FAM\?/$fam/g;
   my $fdname = lc("$enc$fam");
@@ -1486,16 +1483,22 @@ END
 # source_style($font)
 sub source_style {
   my ($fam) = @_; local ($_);
+  my $options = ($scale) ? <<'END' : '';
+\DeclareOption*{\edef\?FAM?@scale{\CurrentOption}}
+\ProcessOptions\relax
+END
   $_ = <<'END';
 % pxacid-?FAM?.sty
 \NeedsTeXFormat{LaTeX2e}
 \ProvidesPackage{pxacid-?FAM?}
+?OPTIONS?
 \DeclareRobustCommand*{\?FAM?family}{%
   \not@math@alphabet\?FAM?family\relax
   \fontfamily{?FAM?}\selectfont}
 \DeclareTextFontCommand{\text?FAM?}{\?FAM?family}
 % EOF
 END
+  s/\?OPTIONS\?\n/$options/g;
   s/\?FAM\?/$fam/g;
   return $_;
 }
@@ -1706,6 +1709,7 @@ Options are:
        --min-kern=<val>     minimum kern to be employed
        --slant=<val>        slant value
        --gid-offset=<val>   offset between CID and GID
+       --scale              enable scale setting by users
 END
 }
 
