@@ -20,8 +20,8 @@ our $std_slant = 0.167;
 our $gid_offset = 0;
 #
 our $prog_name = "pxacid";
-our $version = "0.3.0";
-our $mod_date = "2017/04/19";
+our $version = "0.3.1-pre";
+our $mod_date = "2017/04/20";
 our $temp_base = "__$prog_name$$";
 
 ##-----------------------------------------------------------
@@ -1327,7 +1327,17 @@ sub use_berry { $use_berry = $_[0]; }
 
 # NFSS シリーズ名 → Berry 規則識別子
 our $ser_kb = {
-  l => 'l', m => 'r', b => 'b', bx => 'b', eb => 'x'
+  ul => 'a', # UltraLight
+  el => 'j', # ExtraLight
+  l => 'l',  # Light
+  m => 'r',  # Regular
+  mb => 'm', # Medium
+  db => 'd', # DemiBold
+  sb => 's', # SemiBold
+  b => 'b',  # Bold
+  bx => 'b', # Bold
+  eb => 'x', # Extra
+  ub => 'u'  # Ultra
 };
 # NFSS シェープ名 → Berry 規則識別子
 our $shp_kb = {
@@ -1407,6 +1417,7 @@ sub source_fd {
     ($ser1, $shp1) = $ent =~ m|^(.*)/(.*)$| or die;
     if (defined $spec{$ent}) {
       $text = $spec{$ent};
+      $text = "\\$fam\@\@scale " . $text unless ($text =~ m/\\$fam\@\@scale/);
     } else {
       # シリーズの代替: bとbxの一方のみがある場合は, 他方をそれで代替.
       # mがない場合は今追加したシリーズで代替. それ以外はmで代替.
@@ -1423,6 +1434,11 @@ sub source_fd {
   my $fdname = lc("$enc$fam");
   return <<"END";
 % $fdname.fd
+\\expandafter\\ifx\\csname $fam\@scale\\endcsname\\relax
+  \\let\\$fam\@\@scale\\\@empty
+\\else
+  \\edef\\$fam\@\@scale{s*[\\csname $fam\@scale\\endcsname]}%
+\\fi
 \\DeclareFontFamily{$enc}{$fam}{}
 $text
 %% EOF
