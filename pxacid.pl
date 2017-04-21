@@ -16,6 +16,8 @@ our $min_kern = 0.01;
 # 既定のスラント値. スラント体の SLANT 値に用いられる他, \XeTeXglyphbounds
 # が使えない場合にはイタリック体の SLANT 値にも用いられる.
 our $std_slant = 0.167;
+# ユーザのスケール指定を有効にするか.
+our $scale = 0;
 # アレ
 our $gid_offset = 0;
 #
@@ -1417,7 +1419,10 @@ sub source_fd {
     ($ser1, $shp1) = $ent =~ m|^(.*)/(.*)$| or die;
     if (defined $spec{$ent}) {
       $text = $spec{$ent};
-      $text = "\\$fam\@\@scale " . $text unless ($text =~ m/\\$fam\@\@scale/);
+      if ($scale) {
+        my $t = "\\$fam\@\@scale";
+        if (index($text, $t) < 0) { $text = "$t $text"; }
+      }
     } else {
       # シリーズの代替: bとbxの一方のみがある場合は, 他方をそれで代替.
       # mがない場合は今追加したシリーズで代替. それ以外はmで代替.
@@ -1431,15 +1436,18 @@ sub source_fd {
   }
   $text = join("\n", @cnks);
   # 
+  my $preamble = ($scale) ? <<'END' : '';
+\expandafter\ifx\csname ?FAM?@scale\endcsname\relax
+  \let\?FAM?@@scale\@empty
+\else
+  \edef\?FAM?@@scale{s*[\csname ?FAM?@scale\endcsname]}%
+\fi
+END
+  $preamble =~ s/\?FAM\?/$fam/g;
   my $fdname = lc("$enc$fam");
   return <<"END";
 % $fdname.fd
-\\expandafter\\ifx\\csname $fam\@scale\\endcsname\\relax
-  \\let\\$fam\@\@scale\\\@empty
-\\else
-  \\edef\\$fam\@\@scale{s*[\\csname $fam\@scale\\endcsname]}%
-\\fi
-\\DeclareFontFamily{$enc}{$fam}{}
+$preamble\\DeclareFontFamily{$enc}{$fam}{}
 $text
 %% EOF
 END
@@ -1617,6 +1625,7 @@ sub main {
   (defined $prop->{min_kern}) and $min_kern = $prop->{min_kern};
   (defined $prop->{std_slant}) and $std_slant = $prop->{std_slant};
   (defined $prop->{gid_offset}) and $gid_offset = $prop->{gid_offset};
+  (defined $prop->{scale}) and $scale = 1;
   append_mode($prop->{append});
   use_berry($prop->{use_berry});
   save_source($prop->{save_source});
@@ -1643,6 +1652,8 @@ sub read_option {
       $prop->{save_source} = 1;
     } elsif ($opt eq '--save-log') {
       $prop->{save_log} = 1;
+    } elsif ($opt eq '--scale') {
+      $prop->{scale} = 1;
     } elsif (($arg) = $opt =~ m/^-(?:t|-tfm-family)(?:=(.*))?/) {
       (defined $arg) or $arg = shift(@ARGV);
       ($arg =~ m/^[a-z0-9]+$/) or error("bad family name", $arg);
