@@ -9,8 +9,8 @@ our $opl2ofm = "opl2ofm";
 our $ovp2ovf = "ovp2ovf";
 #
 our $prog_name = "pxpjcid";
-our $version = "0.3.0";
-our $mod_date = "2017/04/19";
+our $version = "0.3.1-pre";
+our $mod_date = "2017/04/20";
 our $temp_base = "__$prog_name$$";
 our $gid_offset = 0;
 
@@ -69,10 +69,10 @@ our $enc_list = [ keys %$tex2ucs_table ];
 ##----------------------------------------------------------
 ## Retrieval of glyph metric by means of XeTeX
 
-# get_metric($font, $chars)
+# get_metric($font, $index, $chars)
 sub get_metric {
-  my ($font, $chars) = @_;
-  write_whole("$temp_base.tex", query_xetex($font, $chars), 1);
+  my ($font, $index, $chars) = @_;
+  write_whole("$temp_base.tex", query_xetex($font, $index, $chars), 1);
   if (-s "$prog_name-save.log") {
     my $t = read_whole("$prog_name-save.log", 1);
     write_whole("$temp_base.log", $t, 1);
@@ -118,9 +118,10 @@ sub nest_assign_sub {
   }
 }
 
-# query_xetex($font, $chars)
+# query_xetex($font, $index, $chars)
 sub query_xetex {
-  my ($font, $chars) = @_; my ($t);
+  my ($font, $index, $chars) = @_; my ($t);
+  (defined $index) and $font = "$font:$index";
   local $_ = <<'END';
 \font\fontU="[?FONT?]"
 \newcount\cntC
@@ -388,7 +389,17 @@ sub use_berry { } # no-pp
 
 # NFSS series -> Berry
 our $ser_kb = {
-  l => 'l', m => 'r', b => 'b', bx => 'b', eb => 'x'
+  ul => 'a', # UltraLight
+  el => 'j', # ExtraLight
+  l => 'l',  # Light
+  m => 'r',  # Regular
+  mb => 'm', # Medium
+  db => 'd', # DemiBold
+  sb => 's', # SemiBold
+  b => 'b',  # Bold
+  bx => 'b', # Bold
+  eb => 'x', # Extra
+  ub => 'u'  # Ultra
 };
 # counterpart
 our $enc_tate = {
@@ -482,9 +493,10 @@ END2
 ##----------------------------------------------------------
 ## dvipdfmx map files
 
-# source_map($fam, $ser, $tfmfam, $font, $orgsrc, $encset)
+# source_map($fam, $ser, $tfmfam, $font, $index, $orgsrc, $encset)
 sub source_map {
-  my ($fam, $ser, $tfmfam, $font, $orgsrc, $encset) = @_;
+  my ($fam, $ser, $tfmfam, $font, $index, $orgsrc, $encset) = @_;
+  (defined $index) and $font = ":$index:$font";
   my @spec;
   foreach my $lin (split(m/\n/, $orgsrc)) {
     if ($lin !~ m/^\s*(\#|$)/) {
@@ -566,9 +578,9 @@ sub save_source { $save_source = $_[0]; }
 
 # generate($font, $fam, $enclist)
 sub generate {
-  my ($font, $fam, $ser, $tfmfam) = @_;
+  my ($font, $fam, $ser, $tfmfam, $index) = @_;
   #
-  my $par = get_metric($font, $target_ucs);
+  my $par = get_metric($font, $index, $target_ucs);
   #
   my $ofmname = fontname($tfmfam, $ser, 'J40');
   info("Process for $ofmname...");
@@ -621,7 +633,7 @@ sub generate {
   if ($append_mode && -f "$mapname.map") {
     $orgmap = read_whole("$mapname.map");
   }
-  my $map = source_map($fam, $ser, $tfmfam, $font, $orgmap, \@encset);
+  my $map = source_map($fam, $ser, $tfmfam, $font, $index, $orgmap, \@encset);
   write_whole("$mapname.map", $map);
   #
   my $styname = "pxpjcid-$fam";
@@ -645,7 +657,7 @@ sub main {
   set_scale($prop->{scale});
   gen_target_list();
   generate($prop->{font}, $prop->{family}, $prop->{series},
-    $prop->{tfm_family});
+    $prop->{tfm_family}, $prop->{index});
 }
 
 # read_option()
@@ -664,19 +676,23 @@ sub read_option {
       $prop->{save_source} = 1;
     } elsif ($opt eq '--save-log') {
       $prop->{save_log} = 1;
-    } elsif (($arg) = $opt =~ m/^-(?:t|-tfm-family)(?:=(.*))?/) {
+    } elsif (($arg) = $opt =~ m/^-(?:t|-tfm-family)(?:=(.*))?$/) {
       (defined $arg) or $arg = shift(@ARGV);
       ($arg =~ m/^[a-z0-9]+$/) or error("bad family name", $arg);
       $prop->{tfm_family} = $arg;
-    } elsif (($arg) = $opt =~ m/^--scale(?:=(.*))?/) {
+    } elsif (($arg) = $opt =~ m/^--scale(?:=(.*))?$/) {
       (defined $arg) or $arg = shift(@ARGV);
       ($arg =~ m/^[.0-9]+$/ && 0 <= $arg && $arg < 10)
         or error("bad scale value", $arg);
       $prop->{scale} = $arg;
-    } elsif (($arg) = $opt =~ m/^--gid-offset(?:=(.*))?/) {
+    } elsif (($arg) = $opt =~ m/^--gid-offset(?:=(.*))?$/) {
       (defined $arg) or $arg = shift(@ARGV);
       ($arg =~ m/^[0-9]+$/) or error("bad gid-offset value", $arg);
       $prop->{gid_offset} = $arg;
+    } elsif (($arg) = $opt =~ m/^-(?:i|-index)(?:=(.*))?$/) {
+      (defined $arg) or $arg = shift(@ARGV);
+      ($arg =~ m/^[0-9]+$/) or error("bad TTC index value", $arg);
+      $prop->{index} = $arg;
     } else {
       error("invalid option", $opt);
     }
