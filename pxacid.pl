@@ -22,8 +22,8 @@ our $scale = 0;
 our $gid_offset = 0;
 #
 our $prog_name = "pxacid";
-our $version = "0.3.1-pre";
-our $mod_date = "2017/04/20";
+our $version = "0.3.1";
+our $mod_date = "2017/04/21";
 our $temp_base = "__$prog_name$$";
 
 ##-----------------------------------------------------------
