@@ -1341,6 +1341,7 @@ our $ser_kb = {
   ul => 'a', # UltraLight
   el => 'j', # ExtraLight
   l => 'l',  # Light
+  r => 'r',   # Regular
   m => 'r',  # Regular
   mb => 'm', # Medium
   db => 'd', # DemiBold
@@ -1397,9 +1398,9 @@ sub source_fd {
     }
   }
   # 現在有効な設定がない場合には既定の初期値を与える
-  # (m,b,bx シリーズと n,it,sl シェープの組み合わせ)
+  # (m,r,b,bx シリーズと n,it,sl シェープの組み合わせ)
   if (!@pos) {
-    foreach $ser1 ('m', 'b', 'bx') {
+    foreach $ser1 ('m', 'r', 'b', 'bx') {
       foreach $shp1 ('n', 'it', 'sl') {
         push(@pos, "$ser1/$shp1"); $spec{"$ser1/$shp1"} = undef;
       }
@@ -1416,10 +1417,11 @@ sub source_fd {
 #    info("$ser1/$shp1=" . $spec{$ent});
 #  }
 #  $ser1 = <STDIN>;
-  # ボールド(bまたはbx)のフォントが存在するかを検査.
-  my $bfser;
+  # レギュラー(rまたはm), ボールド(bまたはbx)のフォントが存在するかを検査.
+  my ($rfser, $bfser);
   foreach my $ent (@pos) {
     (defined $spec{$ent}) or next;
+    if ($ent =~ m|^m?/|) { $rfser = 1; }
     if ($ent =~ m|^bx?/|) { $bfser = 1; }
   }
   # 以上の情報から新しい .fd の内容を決定する.
@@ -1433,9 +1435,11 @@ sub source_fd {
         if (index($text, $t) < 0) { $text = "$t $text"; }
       }
     } else {
-      # シリーズの代替: bとbxの一方のみがある場合は, 他方をそれで代替.
+      # シリーズの代替: rがある場合, mで代替.
+      # bとbxの一方のみがある場合は, 他方をそれで代替.
       # mがない場合は今追加したシリーズで代替. それ以外はmで代替.
       my $ser2 = ($ser1 eq 'm') ? $ser :
+                 ($rfser && $ser1 eq 'r') ? 'm' :
                  ($bfser && $ser1 eq 'b') ? 'bx' :
                  ($bfser && $ser1 eq 'bx') ? 'b' : 'm';
       $text = "ssub*$fam/$ser2/$shp1";
