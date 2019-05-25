@@ -392,6 +392,7 @@ our $ser_kb = {
   ul => 'a', # UltraLight
   el => 'j', # ExtraLight
   l => 'l',  # Light
+  r => 'r',   # Regular
   m => 'r',  # Regular
   mb => 'm', # Medium
   db => 'd', # DemiBold
@@ -438,16 +439,17 @@ sub source_fd {
     }
   }
   if (!@pos) {
-    foreach $ser1 ('m', 'b', 'bx') {
+    foreach $ser1 ('m', 'r', 'b', 'bx') {
       push(@pos, $ser1); $spec{$ser1} = undef;
     }
   }
   if (!exists $spec{$ser}) { push(@pos, $ser); }
   $spec{$ser} = fontname($tfmfam, $ser, $enc);
   #
-  my $bfser;
+  my ($rfser, $bfser);
   foreach my $ent (@pos) {
     (defined $spec{$ent}) or next;
+    if ($ent =~ m|^m?$|) { $rfser = 1; }
     if ($ent =~ m|^bx?$|) { $bfser = 1; }
   }
   # generate new
@@ -457,6 +459,7 @@ sub source_fd {
       $text = "s*[$scale]" . $spec{$ser1};
     } else {
       my $ser2 = ($ser1 eq 'm') ? $ser :
+                 ($rfser && $ser1 eq 'r') ? 'm' :
                  ($bfser && $ser1 eq 'b') ? 'bx' :
                  ($bfser && $ser1 eq 'bx') ? 'b' : 'm';
       $text = "ssub*$fam/$ser2/n";
