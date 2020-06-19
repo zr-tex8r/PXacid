@@ -13,6 +13,7 @@ our $version = "0.4.1";
 our $mod_date = "2020/06/19";
 our $temp_base = "__$prog_name$$";
 our $gid_offset = 0;
+our $avoid_notdef = 0;
 
 ##-----------------------------------------------------------
 ## Mapping between TeX slots and Unicode points
@@ -91,6 +92,7 @@ sub get_metric {
       nest_assign($par, $1);
     }
   }
+  ($avoid_notdef) and purge_notdefish($par);
   close($hi);
   #
   derive_param($par);
@@ -129,7 +131,7 @@ sub query_xetex {
 \newbox\boxA
 \def\writeLog#1{\immediate\write-1{#1}}
 \def\outData#1{\writeLog{!OUT!#1}}
-\def\doForEachAj{?DO_AJ?}
+\def\doForEachAj{\do{0}?DO_AJ?}
 \def\getMetricAj#1#2{%
   #1\def\pname{#2}\cntM=\XeTeXcountglyphs\font
   \let\do\doGetMetricAj \doForEachAj}
@@ -153,6 +155,20 @@ END
 sub do_list {
   my ($vals) = @_;
   return join("%\n", map { "\\do{$_}" } (@$vals));
+}
+
+# purge_notdefish($par)
+sub purge_notdefish {
+  my ($par) = @_;
+  my $aj = $par->{aj};
+  local $_ = $aj->{0}; (defined $_) or die;
+  my ($wd, $ht, $dp) = ($_->{wd}, $_->{ht}, $_->{dp});
+  foreach my $gc (keys %$aj) {
+    $_ = $aj->{$gc};
+    if ($wd == $_->{wd} && $ht == $_->{ht} && $dp == $_->{dp}) {
+      delete $aj->{$gc};
+    }
+  }
 }
 
 # derive_param($par)
@@ -660,6 +676,7 @@ sub main {
   use_berry($prop->{use_berry});
   save_source($prop->{save_source});
   set_scale($prop->{scale});
+  (defined $prop->{avoidnotdef}) and $avoid_notdef = 1;
   (defined $prop->{debug}) and apply_debug($prop->{debug});
   gen_target_list();
   generate($prop->{font}, $prop->{family}, $prop->{series},
@@ -699,6 +716,8 @@ sub read_option {
       $prop->{save_source} = 1;
     } elsif ($opt eq '--save-log') {
       error("option '--save-log' is abolished (use --debug=savelog)");
+    } elsif ($opt eq '--avoid-notdef') {
+      $prop->{avoidnotdef} = 1;
     } elsif (($arg) = $opt =~ m/^-(?:t|-tfm-family)(?:=(.*))?$/) {
       (defined $arg) or $arg = shift(@ARGV);
       ($arg =~ m/^[a-z0-9]+$/) or error("bad family name", $arg);
@@ -751,6 +770,7 @@ Options are:
   -s / --save-source        save PL/OPL/OVP files
        --scale              scale value
        --gid-offset=<val>   offset between CID and GID
+       --avoid-notdef       avoid glyphs that seem like notdef
 END
 }
 

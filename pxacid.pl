@@ -28,6 +28,8 @@ our $italic = 1;
 our $oblique = 1;
 # アレ
 our $gid_offset = 0;
+# アレ
+our $avoid_notdef = 0;
 #
 our $prog_name = "pxacid";
 our $version = "0.4.1";
@@ -900,6 +902,7 @@ sub get_metric {
       nest_assign($par, $1);
     }
   }
+  ($avoid_notdef) and purge_notdefish($par);
   close($hi);
   # 派生パラメタ
   derive_param($par);
@@ -959,7 +962,7 @@ sub query_xetex {
 \def\outData#1{\writeLog{!OUT!#1}}
 %% 符号値のリスト
 \def\doForEachUcs{?DO_UCS?}
-\def\doForEachAj{?DO_AJ?}
+\def\doForEachAj{\do{0}?DO_AJ?}
 %% \ifitalok: 'ital'が使えるか
 \newif\ifitalok
 \cntA="6C61746E %'latn'
@@ -1060,6 +1063,23 @@ END
 sub do_list {
   my ($vals) = @_;
   return join("%\n", map { "\\do{$_}" } (@$vals));
+}
+
+# purge_notdefish($par)
+# 'notdef' グリフと同一と推定されるグリフのメトリックデータを
+# 消去して, そのグリフが利用されないようにする.
+# ※幅・高さ・深さが全て一致するならば notdef と同一と推定する.
+sub purge_notdefish {
+  my ($par) = @_;
+  my $aj = $par->{aj};
+  local $_ = $aj->{0}; (defined $_) or die;
+  my ($wd, $ht, $dp) = ($_->{wd}, $_->{ht}, $_->{dp});
+  foreach my $gc (keys %$aj) {
+    $_ = $aj->{$gc};
+    if ($wd == $_->{wd} && $ht == $_->{ht} && $dp == $_->{dp}) {
+      delete $aj->{$gc};
+    }
+  }
 }
 
 # derive_param($par)
@@ -1670,6 +1690,7 @@ sub main {
   (defined $prop->{monospace}) and $monospace = 1;
   (defined $prop->{scale}) and $scale = 1;
   (defined $prop->{noitalic}) and $italic = 0;
+  (defined $prop->{avoidnotdef}) and $avoid_notdef = 1;
   (defined $prop->{debug}) and apply_debug($prop->{debug});
   append_mode($prop->{append});
   use_berry($prop->{use_berry});
@@ -1728,6 +1749,8 @@ sub read_option {
     } elsif ($opt eq '--monospace') {
       info("WARNING: option '--monospace' is not (yet?) supported");
       $prop->{monospace} = 1;
+    } elsif ($opt eq '--avoid-notdef') {
+      $prop->{avoidnotdef} = 1;
     } elsif (($arg) = $opt =~ m/^-(?:t|-tfm-family)(?:=(.*))?$/) {
       (defined $arg) or $arg = shift(@ARGV);
       ($arg =~ m/^[a-z0-9]+$/) or error("bad family name", $arg);
@@ -1795,6 +1818,7 @@ Options are:
        --gid-offset=<val>   offset between CID and GID
        --scale              enable scale setting by users
        --no-italic          suppress italic shape
+       --avoid-notdef       avoid glyphs that seem like notdef
 END
 }
 
