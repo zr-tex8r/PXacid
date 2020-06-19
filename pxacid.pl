@@ -850,7 +850,7 @@ sub gen_target_list {
 }
 
 # 対象となる TeX エンコーディングのリスト.
-our $enc_list = [ keys %$tex2ucs_table ];
+our $enc_list = [ 'OT1', 'T1', 'LY1', 'TS1' ];
 
 # なお, 直立の CID からイタリックへの変換は次の関数で行った.
 # 参考として記しておく.
@@ -1539,25 +1539,21 @@ in fluffy souffl\'es?\end{quote}}
 \newcommand*{\TestB}{\begin{quote}
 \textyen 1,234 / \$56 / \pounds78 / \texteuro 90\end{quote}}
 \begin{document}
-\?FAM?family \fontseries{?SER?}\fontencoding{OT1}\selectfont
+\?FAM?family \fontseries{?SER?}\fontencoding{T1}\selectfont
 {\noindent\LARGE Family `?FAM?', Series `?SER?'}
 \par\bigskip
-\fontencoding{OT1}\selectfont
-\upshape\noindent[Upright shape, OT1 encoding]\TestA\par
-\itshape\noindent[Italic shape, OT1 encoding]\TestA\par
-\slshape\noindent[Slanted shape, OT1 encoding]\TestA\par
-\fontencoding{T1}\selectfont
-\upshape\noindent[Upright shape, T1 encoding]\TestA\par
-\itshape\noindent[Italic shape, T1 encoding]\TestA\par
-\slshape\noindent[Slanted shape, T1 encoding]\TestA\par
-\fontencoding{LY1}\selectfont
-\upshape\noindent[Upright shape, LY1 encoding]\TestA\par
-\itshape\noindent[Italic shape, LY1 encoding]\TestA\par
-\slshape\noindent[Slanted shape, LY1 encoding]\TestA\par
-\fontencoding{T1}\selectfont
-\upshape\noindent[Upright shape, TS1 encoding]\TestB\par
-\itshape\noindent[Italic shape, TS1 encoding]\TestB\par
-\slshape\noindent[Slanted shape, TS1 encoding]\TestB\par
+END
+  foreach my $enc (@$enc_list) {
+    my $blk = <<'END';
+\fontencoding{?ENC?}\selectfont
+\upshape\noindent[Upright shape, ?ENC? encoding]\Test?X?\par
+\itshape\noindent[Italic shape, ?ENC? encoding]\Test?X?\par
+\slshape\noindent[Slanted shape, ?ENC? encoding]\Test?X?\par
+END
+    my $x = ($enc ne 'TS1') ? 'B' : 'A';
+    $blk =~ s/\?ENC\?/$enc/g; $blk =~ s/\?X\?/$x/g; $_ .= $blk;
+  }
+  $_ .= <<'END';
 \end{document}
 END
   s/\?FAM\?/$fam/g; s/\?SER\?/$ser/g;
@@ -1594,7 +1590,7 @@ sub generate {
   my $slofmname = fontname($tfmfam, $ser, 'sl', 'J40');
   write_whole("$slofmname.ofm", read_whole("$ofmname.ofm", 1), 1);
   # 各エンコーディングの仮想フォントを作成
-  foreach my $enc ('OT1', 'T1', 'LY1', 'TS1') {
+  foreach my $enc (@$enc_list) {
     # 各シェープごとの処理
     foreach my $shp ('n', 'it', 'sl') {
       my $vfname = fontname($tfmfam, $ser, $shp, $enc);
@@ -1662,6 +1658,9 @@ sub main {
 our $debug_proc = {
   savelog => sub {
     save_log(1);
+  },
+  onlyt1 => sub {
+    $enc_list = ['T1'];
   },
 };
 
