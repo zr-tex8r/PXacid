@@ -1338,17 +1338,21 @@ sub use_berry { $use_berry = $_[0]; }
 
 # NFSS シリーズ名 → Berry 規則識別子
 our $ser_kb = {
-  ul => 'a', # UltraLight
-  el => 'j', # ExtraLight
-  l => 'l',  # Light
-  m => 'r',  # Regular
-  mb => 'm', # Medium
-  db => 'd', # DemiBold
-  sb => 's', # SemiBold
-  b => 'b',  # Bold
-  bx => 'b', # Bold
-  eb => 'x', # Extra
-  ub => 'u'  # Ultra
+  ul => 'a',  # UltraLight
+  el => 'j',  # ExtraLight
+  l => 'l',   # Light
+  dl => 'dl', # DemiLight (non-standard?)
+  m => 'r',   # Regular
+  mb => 'm',  # Medium
+  db => 'd',  # DemiBold
+  sb => 's',  # SemiBold
+  b => 'b',   # Bold
+  bx => 'b',  # Bold
+  eb => 'x',  # ExtraBold
+  h => 'h',   # Heavy (non-standard?)
+  eh => 'xh', # ExtraHeavy (non-standard?)
+  ub => 'u',  # Ultra
+  uh => 'uh'  # UltraHeavy (non-standard?)
 };
 # NFSS シェープ名 → Berry 規則識別子
 our $shp_kb = {
