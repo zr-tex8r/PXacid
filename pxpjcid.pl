@@ -9,8 +9,8 @@ our $opl2ofm = "opl2ofm";
 our $ovp2ovf = "ovp2ovf";
 #
 our $prog_name = "pxpjcid";
-our $version = "0.3.1";
-our $mod_date = "2017/04/21";
+our $version = "0.4.1";
+our $mod_date = "2020/06/19";
 our $temp_base = "__$prog_name$$";
 our $gid_offset = 0;
 
@@ -391,19 +391,20 @@ sub use_berry { } # no-pp
 our $ser_kb = {
   ul => 'a',  # UltraLight
   el => 'j',  # ExtraLight
-  l => 'l',   # Light
-  dl => 'dl', # DemiLight (non-standard?)
-  m => 'r',   # Regular
+  l  => 'l',  # Light
+  dl => 'dl', # DemiLight (NON-STANDARD)
+  r  => 'r',  # Regular
+  m  => 'r',  # Regular
   mb => 'm',  # Medium
   db => 'd',  # DemiBold
   sb => 's',  # SemiBold
-  b => 'b',   # Bold
+  b  => 'b',  # Bold
   bx => 'b',  # Bold
   eb => 'x',  # ExtraBold
-  h => 'h',   # Heavy (non-standard?)
-  eh => 'xh', # ExtraHeavy (non-standard?)
+  h  => 'h',  # Heavy
+  eh => 'xh', # ExtraHeavy (NON-STANDARD)
   ub => 'u',  # Ultra
-  uh => 'uh'  # UltraHeavy (non-standard?)
+  uh => 'uh'  # UltraHeavy (NON-STANDARD)
 };
 # counterpart
 our $enc_tate = {
@@ -449,10 +450,11 @@ sub source_fd {
   if (!exists $spec{$ser}) { push(@pos, $ser); }
   $spec{$ser} = fontname($tfmfam, $ser, $enc);
   #
-  my $bfser;
+  my ($mdser, $bfser);
   foreach my $ent (@pos) {
     (defined $spec{$ent}) or next;
-    if ($ent =~ m|^bx?$|) { $bfser = 1; }
+    (defined $mdser) or ($mdser) = $ent =~ m|^([mr])$/|;
+    (defined $bfser) or ($bfser) = $ent =~ m|^(bx?)$/|;
   }
   # generate new
   my (@cnks, $text, @cnkst, $textt);
@@ -460,9 +462,9 @@ sub source_fd {
     if (defined $spec{$ser1}) {
       $text = "s*[$scale]" . $spec{$ser1};
     } else {
-      my $ser2 = ($ser1 eq 'm') ? $ser :
-                 ($bfser && $ser1 eq 'b') ? 'bx' :
-                 ($bfser && $ser1 eq 'bx') ? 'b' : 'm';
+      my $ser2 = ($mdser && $ser1 =~ m/^[mr]$/) ? $mdser :
+                 ($bfser && $ser1 =~ m/^bx?$/) ? $bfser :
+                 ($ser1 eq 'm') ? $ser : 'm';
       $text = "ssub*$fam/$ser2/n";
     }
     my $text2 = "ssub*$fam/$ser1/n";

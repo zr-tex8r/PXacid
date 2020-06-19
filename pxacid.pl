@@ -26,8 +26,8 @@ our $monospace = 0;
 our $gid_offset = 0;
 #
 our $prog_name = "pxacid";
-our $version = "0.4.0";
-our $mod_date = "2017/08/17";
+our $version = "0.4.1";
+our $mod_date = "2020/06/19";
 our $temp_base = "__$prog_name$$";
 
 ##-----------------------------------------------------------
@@ -1340,19 +1340,20 @@ sub use_berry { $use_berry = $_[0]; }
 our $ser_kb = {
   ul => 'a',  # UltraLight
   el => 'j',  # ExtraLight
-  l => 'l',   # Light
-  dl => 'dl', # DemiLight (non-standard?)
-  m => 'r',   # Regular
+  l  => 'l',  # Light
+  dl => 'dl', # DemiLight (NON-STANDARD)
+  r  => 'r',  # Regular
+  m  => 'r',  # Regular
   mb => 'm',  # Medium
   db => 'd',  # DemiBold
   sb => 's',  # SemiBold
-  b => 'b',   # Bold
+  b  => 'b',  # Bold
   bx => 'b',  # Bold
   eb => 'x',  # ExtraBold
-  h => 'h',   # Heavy (non-standard?)
-  eh => 'xh', # ExtraHeavy (non-standard?)
+  h  => 'h',  # Heavy
+  eh => 'xh', # ExtraHeavy (NON-STANDARD)
   ub => 'u',  # Ultra
-  uh => 'uh'  # UltraHeavy (non-standard?)
+  uh => 'uh'  # UltraHeavy (NON-STANDARD)
 };
 # NFSS シェープ名 → Berry 規則識別子
 our $shp_kb = {
@@ -1420,11 +1421,13 @@ sub source_fd {
 #    info("$ser1/$shp1=" . $spec{$ent});
 #  }
 #  $ser1 = <STDIN>;
-  # ボールド(bまたはbx)のフォントが存在するかを検査.
-  my $bfser;
+  # ミディアム(mまたはr)おとびボールド(bまたはbx)に相当する
+  # シリーズを探索する.
+  my ($mdser, $bfser);
   foreach my $ent (@pos) {
     (defined $spec{$ent}) or next;
-    if ($ent =~ m|^bx?/|) { $bfser = 1; }
+    (defined $mdser) or ($mdser) = $ent =~ m|^([mr])/|;
+    (defined $bfser) or ($bfser) = $ent =~ m|^(bx?)/|;
   }
   # 以上の情報から新しい .fd の内容を決定する.
   my (@cnks, $text);
@@ -1438,10 +1441,11 @@ sub source_fd {
       }
     } else {
       # シリーズの代替: bとbxの一方のみがある場合は, 他方をそれで代替.
+      # mとrの一方のみがある場合は, 他方をそれで代替.
       # mがない場合は今追加したシリーズで代替. それ以外はmで代替.
-      my $ser2 = ($ser1 eq 'm') ? $ser :
-                 ($bfser && $ser1 eq 'b') ? 'bx' :
-                 ($bfser && $ser1 eq 'bx') ? 'b' : 'm';
+      my $ser2 = ($mdser && $ser1 =~ m/^[mr]$/) ? $mdser :
+                 ($bfser && $ser1 =~ m/^bx?$/) ? $bfser :
+                 ($ser1 eq 'm') ? $ser : 'm';
       $text = "ssub*$fam/$ser2/$shp1";
     }
     push(@cnks,
