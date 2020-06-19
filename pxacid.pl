@@ -22,6 +22,10 @@ our $scale = 0;
 our $ligature = 2;
 # 等幅エンコーディングを用いるか. (未実装)
 our $monospace = 0;
+# イタリックを生成するか.
+our $italic = 1;
+# オブリークを生成するか.
+our $oblique = 1;
 # アレ
 our $gid_offset = 0;
 #
@@ -970,12 +974,17 @@ sub query_xetex {
 %% スラント値の推定
 \fontU
 \ifx\XeTeXglyphbounds\undefined\else
+\dimA=\XeTeXglyphbounds 2 ?129?\relax
+\dimB=\XeTeXglyphbounds 2 ?9572?\relax
+\advance\dimA-\dimB \ifdim\dimA<0pt \dimA-\dimA\fi
+\ifdim\dimA<0.025pt
 \dimA=\XeTeXglyphbounds 3 ?129?\relax
 \dimB=\XeTeXglyphbounds 3 ?9572?\relax
 \advance\dimA-\dimB
 \dimB=\XeTeXglyphbounds 2 ?129?\relax
 \outData{slantx=\the\dimA}
 \outData{slanty=\the\dimB}
+\fi
 \fi
 %% Unicode 文字に対し基本メトリックを取得し出力する
 %% \getMetric\<フォント>{<表示接頭辞>}
@@ -1413,7 +1422,8 @@ sub source_fd {
   # 新しいシリーズを追加
   foreach $shp1 ('n', 'it', 'sl') {
     if (!exists $spec{"$ser/$shp1"}) { push(@pos, "$ser/$shp1"); }
-    $spec{"$ser/$shp1"} = fontname($tfmfam, $ser, $shp1, $enc);
+    $spec{"$ser/$shp1"} = (!is_shape_ok($shp1)) ? undef :
+        fontname($tfmfam, $ser, $shp1, $enc);
   }
   #
 #  foreach my $ent (@pos) {
@@ -1446,7 +1456,8 @@ sub source_fd {
       my $ser2 = ($mdser && $ser1 =~ m/^[mr]$/) ? $mdser :
                  ($bfser && $ser1 =~ m/^bx?$/) ? $bfser :
                  ($ser1 eq 'm') ? $ser : 'm';
-      $text = "ssub*$fam/$ser2/$shp1";
+      $text = (is_shape_ok($shp1)) ? "ssub*$fam/$ser2/$shp1" :
+          "ssub*$fam/$ser1/n";
     }
     push(@cnks,
       "\\DeclareFontShape{$enc}{$fam}{$ser1}{$shp1}{<->$text}{}");
@@ -1465,6 +1476,12 @@ $preamble\\DeclareFontFamily{$enc}{$fam}{}
 $text
 %% EOF
 END
+}
+
+# is_shape_ok($shp)
+sub is_shape_ok {
+  my ($shp) = @_;
+  return !($shp eq 'it' && !$italic || $shp eq 'sl' && !$oblique);
 }
 
 ##----------------------------------------------------------
@@ -1578,6 +1595,10 @@ sub generate {
   my ($font, $fam, $ser, $tfmfam, $index) = @_;
   # XeTeX を用いてメトリック情報を得る
   my $par = get_metric($font, $index, $target_ucs);
+  if ($italic && $par->{italok} == 0) {
+    info("WARNING: italic glyphs unavailable");
+    $italic = 0;
+  }
   # AJ1 の OFM を作成
   my $ofmname = fontname($tfmfam, $ser, 'n', 'J40');
   info("Process for $ofmname...");
@@ -1587,12 +1608,15 @@ sub generate {
     or error("failed in converting OPL -> OFM", "$ofmname.ofm");
   if (!$save_source) { unlink("$ofmname.opl"); }
   # スラント用に OFM をコピー
-  my $slofmname = fontname($tfmfam, $ser, 'sl', 'J40');
-  write_whole("$slofmname.ofm", read_whole("$ofmname.ofm", 1), 1);
+  if ($oblique) {
+    my $slofmname = fontname($tfmfam, $ser, 'sl', 'J40');
+    write_whole("$slofmname.ofm", read_whole("$ofmname.ofm", 1), 1);
+  }
   # 各エンコーディングの仮想フォントを作成
   foreach my $enc (@$enc_list) {
     # 各シェープごとの処理
     foreach my $shp ('n', 'it', 'sl') {
+      (is_shape_ok($shp)) or next;
       my $vfname = fontname($tfmfam, $ser, $shp, $enc);
       info("Process for $vfname...");
       my ($pl, $ovp) =
@@ -1645,6 +1669,7 @@ sub main {
   (defined $prop->{gid_offset}) and $gid_offset = $prop->{gid_offset};
   (defined $prop->{monospace}) and $monospace = 1;
   (defined $prop->{scale}) and $scale = 1;
+  (defined $prop->{noitalic}) and $italic = 0;
   (defined $prop->{debug}) and apply_debug($prop->{debug});
   append_mode($prop->{append});
   use_berry($prop->{use_berry});
@@ -1661,6 +1686,9 @@ our $debug_proc = {
   },
   onlyt1 => sub {
     $enc_list = ['T1'];
+  },
+  nooblique => sub {
+    $oblique = 0;
   },
 };
 
@@ -1695,6 +1723,8 @@ sub read_option {
       error("option '--save-log' is abolished (use --debug=savelog)");
     } elsif ($opt eq '--scale') {
       $prop->{scale} = 1;
+    } elsif ($opt eq '--no-italic') {
+      $prop->{noitalic} = 1;
     } elsif ($opt eq '--monospace') {
       info("WARNING: option '--monospace' is not (yet?) supported");
       $prop->{monospace} = 1;
@@ -1764,6 +1794,7 @@ Options are:
        --slant=<val>        slant value
        --gid-offset=<val>   offset between CID and GID
        --scale              enable scale setting by users
+       --no-italic          suppress italic shape
 END
 }
 
