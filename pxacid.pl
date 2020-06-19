@@ -1649,13 +1649,32 @@ sub main {
   (defined $prop->{gid_offset}) and $gid_offset = $prop->{gid_offset};
   (defined $prop->{monospace}) and $monospace = 1;
   (defined $prop->{scale}) and $scale = 1;
+  (defined $prop->{debug}) and apply_debug($prop->{debug});
   append_mode($prop->{append});
   use_berry($prop->{use_berry});
   save_source($prop->{save_source});
-  save_log($prop->{save_log});
   gen_target_list();
   generate($prop->{font}, $prop->{family}, $prop->{series},
     $prop->{tfm_family}, $prop->{index});
+}
+
+# デバッグ用の設定.
+our $debug_proc = {
+  savelog => sub {
+    save_log(1);
+  },
+};
+
+# apply_debug($names)
+# --debug オプションで指定したデバッグ設定を適用する.
+sub apply_debug {
+  foreach (@{$_[0]}) {
+    if (exists $debug_proc->{$_}) {
+      $debug_proc->{$_}();
+    } else {
+      info("WARNING: no such debug process '$_'");
+    }
+  }
 }
 
 # read_option()
@@ -1674,10 +1693,11 @@ sub read_option {
     } elsif ($opt eq '-s' || $opt eq '--save-source') {
       $prop->{save_source} = 1;
     } elsif ($opt eq '--save-log') {
-      $prop->{save_log} = 1;
+      error("option '--save-log' is abolished (use --debug=savelog)");
     } elsif ($opt eq '--scale') {
       $prop->{scale} = 1;
     } elsif ($opt eq '--monospace') {
+      info("WARNING: option '--monospace' is not (yet?) supported");
       $prop->{monospace} = 1;
     } elsif (($arg) = $opt =~ m/^-(?:t|-tfm-family)(?:=(.*))?$/) {
       (defined $arg) or $arg = shift(@ARGV);
@@ -1704,6 +1724,9 @@ sub read_option {
       (defined $arg) or $arg = shift(@ARGV);
       ($arg =~ m/^[0-9]+$/) or error("bad TTC index value", $arg);
       $prop->{index} = $arg;
+    } elsif (($arg) = $opt =~ m/^--debug(?:=(.*))?$/) {
+      (defined $arg && $arg ne '') or error("missing argument", $opt);
+      $prop->{debug} = [split(m/,/, $arg)];
     } else {
       error("invalid option", $opt);
     }
