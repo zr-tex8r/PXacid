@@ -32,8 +32,8 @@ our $gid_offset = 0;
 our $avoid_notdef = 0;
 #
 our $prog_name = "pxacid";
-our $version = "0.5.0";
-our $mod_date = "2020/06/20";
+our $version = "0.6.0";
+our $mod_date = "2020/06/21";
 our $temp_base = "__$prog_name$$";
 
 ##-----------------------------------------------------------

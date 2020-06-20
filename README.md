@@ -71,10 +71,15 @@ pxacid.pl
   * `-b`/`--use-berry`： TeX フォント名（TFM ファイルのベース名）に
     「Berry 命名規則」（`xxxri7t` のような形式）を採用する。既定は「ZR
     命名規則（謎）」（`xxx-ri-ot1` のような形式）である。
+  * `--use-long`： TeX フォント名に「長い命名規則」を採用する。
+    （`xxx-Regular-Italic-OT1` のような形式）
   * `-t`/`--tfm-family=<名前>`： TeX フォント名の「ファミリ名」の部分
     （前項の `xxx` の部分；Berry 規則の場合「ベンダ名+ファミリ名」に相当
     する）の名前を指定する。この名前の既定値は引数の `<ファミリ>` に指定
     した名前（つまり NFSS でのファミリ名）である。
+  * `--tfm-weight=<名前>`： TeX フォント名の「ウェイト名」の部分（前項の
+    `r` の部分）の名前を指定する。ウェイト名の既定値は NFSS のシリーズ名
+    から導出される。（例えば、ZR 規則でシリーズが `eb` なら `x`。）
   * `-i`/`--index=<値>`：  OpenType Collection 形式のファイル（.ttc/.otc）
     を指定する場合に、対象のフォントのインデックス番号を指定する。
   * `-s`/`--save-source`： 出力の TFM/VF ファイルの変換元として一時的に
@@ -136,7 +141,9 @@ pxpjcid.pl ― おまけ
 以下のオプションは pxacid と同様。
 
   * `-a`/`--append`
+  * `--use-long`
   * `-t`/`--tfm-family=<名前>`
+  * `--tfm-weight=<名前>`
   * `-i`/`--index=<値>`
   * `-s`/`--save-source`
   * `--avoid-notdef`
@@ -150,6 +157,9 @@ pxpjcid.pl ― おまけ
 更新履歴
 --------
 
+  * Version 0.6.0 〈2020/06/21〉
+      - `--use-long` オプションを新設。
+      - `--tfm-weight` オプションを新設。
   * Version 0.5.0 〈2020/06/20〉
       - `--noitalic` オプションを新設。
       - `--avoid-notdef` オプションを新設。
