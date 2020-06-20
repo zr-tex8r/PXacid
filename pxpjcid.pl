@@ -400,8 +400,13 @@ our $std_cmap = {
 };
 sub standard_cmap { return $std_cmap->{$_[0]}; }
 
-# use_berry($sw)
-sub use_berry { } # no-pp
+# tfm_scheme($sch)
+our $tfm_scheme = 'zr';
+sub tfm_scheme { $tfm_scheme = $_[0]; }
+
+# prefer_weight_name($ser, $nam)
+our $weight_name = {};
+sub prefer_weight_name { $weight_name->{$_[0]} = $_[1]; }
 
 # NFSS series -> Berry
 our $ser_kb = {
@@ -422,6 +427,25 @@ our $ser_kb = {
   ub => 'u',  # Ultra
   uh => 'uh'  # UltraHeavy (NON-STANDARD)
 };
+# NFSS series -> Long
+our $ser_long = {
+  ul => 'UltraLight',
+  el => 'ExtraLight',
+  l  => 'Light',
+  dl => 'DemiLight',
+  r  => 'Regular',
+  m  => 'Regular',
+  mb => 'Medium',
+  db => 'DemiBold',
+  sb => 'SemiBold',
+  b  => 'Bold',
+  bx => 'Bold',
+  eb => 'ExtraBold',
+  h  => 'Heavy',
+  eh => 'ExtraHeavy',
+  ub => 'Ultra',
+  uh => 'UltraHeavy',
+};
 # counterpart
 our $enc_tate = {
   JY1 => 'JT1', JY2 => 'JT2'
@@ -429,10 +453,17 @@ our $enc_tate = {
 # fontname($tfmfam, $ser, $enc, $raw)
 sub fontname {
   my ($tfmfam, $ser, $enc, $raw) = @_;
-  $raw = ($raw) ? "r-" : "";
-  $ser = $ser_kb->{$ser};
-  $enc = lc($enc);
-  return "$raw$tfmfam-$ser-$enc";
+  my $wgt = $weight_name->{$ser};
+  if ($tfm_scheme eq 'long') {
+    my $r = ($raw) ? "--base" : "";
+    (defined $wgt) or $wgt = $ser_long->{$ser};
+    return "$tfmfam-$wgt-$enc$r";
+  } else { # 'zr'
+    my $r = ($raw) ? "r-" : "";
+    (defined $wgt) or $wgt = $ser_kb->{$ser};
+    my $tfmenc = lc($enc);
+    return "$r$tfmfam-$wgt-$tfmenc";
+  }
 }
 
 ##----------------------------------------------------------
@@ -673,7 +704,9 @@ sub main {
   my $prop = read_option();
   (defined $prop->{gid_offset}) and $gid_offset = $prop->{gid_offset};
   append_mode($prop->{append});
-  use_berry($prop->{use_berry});
+  (defined $prop->{use_long}) and tfm_scheme('long');
+  (defined $prop->{tfm_weight})
+    and prefer_weight_name($prop->{series}, $prop->{tfm_weight});
   save_source($prop->{save_source});
   set_scale($prop->{scale});
   (defined $prop->{avoidnotdef}) and $avoid_notdef = 1;
@@ -711,7 +744,9 @@ sub read_option {
     } elsif ($opt eq '-a' || $opt eq '--append') {
       $prop->{append} = 1;
     } elsif ($opt eq '-b' || $opt eq '--use-berry') {
-      $prop->{use_berry} = 1;
+      error("option '--use-berry' is not supported");
+    } elsif ($opt eq '--use-long') {
+      $prop->{use_long} = 1;
     } elsif ($opt eq '-s' || $opt eq '--save-source') {
       $prop->{save_source} = 1;
     } elsif ($opt eq '--save-log') {
@@ -720,8 +755,12 @@ sub read_option {
       $prop->{avoidnotdef} = 1;
     } elsif (($arg) = $opt =~ m/^-(?:t|-tfm-family)(?:=(.*))?$/) {
       (defined $arg) or $arg = shift(@ARGV);
-      ($arg =~ m/^[a-z0-9]+$/) or error("bad family name", $arg);
+      ($arg =~ m/^[A-Za-z0-9]+$/) or error("bad family name", $arg);
       $prop->{tfm_family} = $arg;
+    } elsif (($arg) = $opt =~ m/^-(?:t|-tfm-weight)(?:=(.*))?$/) {
+      (defined $arg) or $arg = shift(@ARGV);
+      ($arg =~ m/^[A-Za-z0-9]+$/) or error("bad weight name", $arg);
+      $prop->{tfm_weight} = $arg;
     } elsif (($arg) = $opt =~ m/^--scale(?:=(.*))?$/) {
       (defined $arg) or $arg = shift(@ARGV);
       ($arg =~ m/^[.0-9]+$/ && 0 <= $arg && $arg < 10)
@@ -745,9 +784,10 @@ sub read_option {
   ($#ARGV == 1) or error("wrong number of command arguments");
   my ($fam, $ser) = ($ARGV[0] =~ m|^(.*?)/(.*)$|) ?
        ($1, $2) : ($ARGV[0], 'm');
-  ($fam =~ m/^[a-z]+$/) or error("bad family name", $fam);
+  ($fam =~ m/^[A-Za-z0-9]+$/) or error("bad family name", $fam);
   ($ser =~ m/^[a-z]+$/) or error("bad series name", $ser);
-  (exists $ser_kb->{$ser}) or error("unknown series name", $ser);
+  (defined $prop->{tfm_weight} || exists $ser_kb->{$ser})
+    or error("unknown series name", $ser);
   $prop->{family} = $fam; $prop->{series} = $ser;
   $prop->{font} = $ARGV[1];
   (defined $prop->{tfm_family})
@@ -766,7 +806,9 @@ Usage: $prog_name [<option>...] <family>[/<series>] <font_file>
               must be put in the location Kpathsea can find
 Options are:
   -a / --append             append mode (for .fd & .map)
+       --use-long           use long naming scheme
   -t / --tfm-family=<name>  font family name used in tfm names
+       --tfm-weight=<name>  font weight name used in tfm names
   -i / --index=<val>        TTC/OTC font index number
   -s / --save-source        save PL/OPL/OVP files
        --scale              scale value

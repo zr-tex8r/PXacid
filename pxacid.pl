@@ -1359,11 +1359,15 @@ sub FH {
   return sprintf("%X", $_[0]);
 }
 
-# use_berry($sw)
-# Berry 規則を使うかを指定. $sw はブール値.
-# ちなみに既定の命名は「ZR規則」である ;-)
-our $use_berry = 0;
-sub use_berry { $use_berry = $_[0]; }
+# tfm_scheme($sch)
+# TFM の命名規則を $sch にする.
+# zr=ZR規則; berry=Berry規則; long=Long規則.
+our $tfm_scheme = 'zr';
+sub tfm_scheme { $tfm_scheme = $_[0]; }
+
+# prefer_weight_name($ser, $nam)
+our $weight_name = {};
+sub prefer_weight_name { $weight_name->{$_[0]} = $_[1]; }
 
 # NFSS シリーズ名 → Berry 規則識別子
 our $ser_kb = {
@@ -1384,9 +1388,32 @@ our $ser_kb = {
   ub => 'u',  # Ultra
   uh => 'uh'  # UltraHeavy (NON-STANDARD)
 };
+# NFSS シリーズ名 → Long 規則識別子
+our $ser_long = {
+  ul => 'UltraLight',
+  el => 'ExtraLight',
+  l  => 'Light',
+  dl => 'DemiLight',
+  r  => 'Regular',
+  m  => 'Regular',
+  mb => 'Medium',
+  db => 'DemiBold',
+  sb => 'SemiBold',
+  b  => 'Bold',
+  bx => 'Bold',
+  eb => 'ExtraBold',
+  h  => 'Heavy',
+  eh => 'ExtraHeavy',
+  ub => 'Ultra',
+  uh => 'UltraHeavy',
+};
 # NFSS シェープ名 → Berry 規則識別子
 our $shp_kb = {
   n => '', it => 'i', sl => 'o'
+};
+# NFSS シェープ名 → Long 規則識別子
+our $shp_long = {
+  n => '', it => 'Italic', sl => 'Oblique'
 };
 # LaTeX エンコーディング名 → Berry 規則識別子
 our $enc_kb = {
@@ -1398,14 +1425,21 @@ our $enc_kb = {
 # はシリーズ名, $shp はシェープ名, $enc はエンコーディング名.
 sub fontname {
   my ($tfmfam, $ser, $shp, $enc) = @_;
-  $shp = $shp_kb->{$shp};
-  $ser = $ser_kb->{$ser};
-  if ($use_berry) {
-    $enc = (exists $enc_kb->{$enc}) ? $enc_kb->{$enc} : lc($enc);
-    return "$tfmfam$ser$shp$enc";
-  } else {
-    $enc = lc($enc);
-    return "$tfmfam-$ser$shp-$enc";
+  my $wgt = $weight_name->{$ser};
+  if ($tfm_scheme eq 'berry') {
+    my $var = $shp_kb->{$shp};
+    (defined $wgt) or $wgt = $ser_kb->{$ser};
+    my $tfmenc = (exists $enc_kb->{$enc}) ? $enc_kb->{$enc} : lc($enc);
+    return "$tfmfam$wgt$var$tfmenc";
+  } elsif ($tfm_scheme eq 'long') {
+    my $var = $shp_long->{$shp}; ($var ne '') and $var = "-$var";
+    (defined $wgt) or $wgt = $ser_long->{$ser};
+    return "$tfmfam-$wgt$var-$enc";
+  } else { # 'zr'
+    my $var = $shp_kb->{$shp};
+    (defined $wgt) or $wgt = $ser_kb->{$ser};
+    my $tfmenc = lc($enc);
+    return "$tfmfam-$wgt$var-$tfmenc";
   }
 }
 
@@ -1693,7 +1727,10 @@ sub main {
   (defined $prop->{avoidnotdef}) and $avoid_notdef = 1;
   (defined $prop->{debug}) and apply_debug($prop->{debug});
   append_mode($prop->{append});
-  use_berry($prop->{use_berry});
+  (defined $prop->{use_berry}) and tfm_scheme('berry');
+  (defined $prop->{use_long}) and tfm_scheme('long');
+  (defined $prop->{tfm_weight})
+    and prefer_weight_name($prop->{series}, $prop->{tfm_weight});
   save_source($prop->{save_source});
   gen_target_list();
   generate($prop->{font}, $prop->{family}, $prop->{series},
@@ -1738,6 +1775,8 @@ sub read_option {
       $prop->{append} = 1;
     } elsif ($opt eq '-b' || $opt eq '--use-berry') {
       $prop->{use_berry} = 1;
+    } elsif ($opt eq '--use-long') {
+      $prop->{use_long} = 1;
     } elsif ($opt eq '-s' || $opt eq '--save-source') {
       $prop->{save_source} = 1;
     } elsif ($opt eq '--save-log') {
@@ -1753,8 +1792,12 @@ sub read_option {
       $prop->{avoidnotdef} = 1;
     } elsif (($arg) = $opt =~ m/^-(?:t|-tfm-family)(?:=(.*))?$/) {
       (defined $arg) or $arg = shift(@ARGV);
-      ($arg =~ m/^[a-z0-9]+$/) or error("bad family name", $arg);
+      ($arg =~ m/^[A-Za-z0-9]+$/) or error("bad family name", $arg);
       $prop->{tfm_family} = $arg;
+    } elsif (($arg) = $opt =~ m/^-(?:t|-tfm-weight)(?:=(.*))?$/) {
+      (defined $arg) or $arg = shift(@ARGV);
+      ($arg =~ m/^[A-Za-z0-9]+$/) or error("bad weight name", $arg);
+      $prop->{tfm_weight} = $arg;
     } elsif (($arg) = $opt =~ m/^-(?:l|-ligature)(?:=(.*))?$/) {
       (defined $arg) or $arg = shift(@ARGV);
       ($arg =~ m/^[012]$/) or error("bad ligature value", $arg);
@@ -1784,15 +1827,20 @@ sub read_option {
     }
   }
   ($#ARGV == 1) or error("wrong number of command arguments");
+  (!($prop->{use_berry} && $prop->{use_long}))
+    or error("cannot use both --use-berry and --use-long");
   my ($fam, $ser) = ($ARGV[0] =~ m|^(.*?)/(.*)$|) ?
        ($1, $2) : ($ARGV[0], 'm');
-  ($fam =~ m/^[a-z]+$/) or error("bad family name", $fam);
+  ($fam =~ m/^[A-Za-z0-9]+$/) or error("bad family name", $fam);
   ($ser =~ m/^[a-z]+$/) or error("bad series name", $ser);
-  (exists $ser_kb->{$ser}) or error("unknown series name", $ser);
+  (defined $prop->{tfm_weight} || exists $ser_kb->{$ser})
+    or error("unknown series name", $ser);
   $prop->{family} = $fam; $prop->{series} = $ser;
   $prop->{font} = $ARGV[1];
   (defined $prop->{tfm_family})
     or $prop->{tfm_family} = $prop->{family};
+  (!$prop->{use_berry} || $prop->{tfm_family} =~ m/^[a-z]+$/)
+    or error("bad tfm family name", $prop->{tfm_family});
   return $prop;
 }
 
@@ -1809,7 +1857,9 @@ Usage: $prog_name [<option>...] <family>[/<series>] <font_file>
 Options are:
   -a / --append             append mode (for .fd & .map)
   -b / --use-berry          use Berry naming scheme
+       --use-long           use long naming scheme
   -t / --tfm-family=<name>  font family name used in tfm names
+       --tfm-weight=<name>  font weight name used in tfm names
   -i / --index=<val>        TTC/OTC font index number
   -s / --save-source        save PL/OPL/OVP files
   -l / --ligature=<val>     ligature level (0..2; default=2)
