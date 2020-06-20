@@ -9,8 +9,8 @@ our $opl2ofm = "opl2ofm";
 our $ovp2ovf = "ovp2ovf";
 #
 our $prog_name = "pxpjcid";
-our $version = "0.4.1";
-our $mod_date = "2020/06/19";
+our $version = "0.5.0";
+our $mod_date = "2020/06/20";
 our $temp_base = "__$prog_name$$";
 our $gid_offset = 0;
 our $avoid_notdef = 0;
@@ -767,10 +767,13 @@ Usage: $prog_name [<option>...] <family>[/<series>] <font_file>
 Options are:
   -a / --append             append mode (for .fd & .map)
   -t / --tfm-family=<name>  font family name used in tfm names
+  -i / --index=<val>        TTC/OTC font index number
   -s / --save-source        save PL/OPL/OVP files
        --scale              scale value
-       --gid-offset=<val>   offset between CID and GID
        --avoid-notdef       avoid glyphs that seem like notdef
+       --gid-offset=<val>   offset between CID and GID
+       --debug=<name>,...   enable debug features
+                            (name: savelog)
 END
 }
 

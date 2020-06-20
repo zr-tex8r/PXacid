@@ -32,8 +32,8 @@ our $gid_offset = 0;
 our $avoid_notdef = 0;
 #
 our $prog_name = "pxacid";
-our $version = "0.4.1";
-our $mod_date = "2020/06/19";
+our $version = "0.5.0";
+our $mod_date = "2020/06/20";
 our $temp_base = "__$prog_name$$";
 
 ##-----------------------------------------------------------
@@ -1815,10 +1815,12 @@ Options are:
   -l / --ligature=<val>     ligature level (0..2; default=2)
        --min-kern=<val>     minimum kern to be employed
        --slant=<val>        slant value
-       --gid-offset=<val>   offset between CID and GID
        --scale              enable scale setting by users
        --no-italic          suppress italic shape
        --avoid-notdef       avoid glyphs that seem like notdef
+       --gid-offset=<val>   offset between CID and GID
+       --debug=<name>,...   enable debug features
+                            (name: nooblique onlyt1 savelog)
 END
 }
 
