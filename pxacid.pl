@@ -30,10 +30,12 @@ our $oblique = 1;
 our $gid_offset = 0;
 # アレ
 our $avoid_notdef = 0;
+# アレ
+our $adjust_accent = 0;
 #
 our $prog_name = "pxacid";
-our $version = "0.6.0";
-our $mod_date = "2020/06/21";
+our $version = "0.7.0";
+our $mod_date = "2021/01/21";
 our $temp_base = "__$prog_name$$";
 
 ##-----------------------------------------------------------
@@ -830,6 +832,11 @@ our $ucs2aj_table = {
 0xFB04=>[9360,9680],
 };
 
+# アクセント位置補正の対象となりえる CID のリスト.
+our @adjust_accent_candidates = (
+  127 .. 137, 9570 .. 9580
+);
+
 ## ucs2aj($uc, $it)
 # Unicode 位置 $uc の文字に対応する AJ1 の CID. $ital が真の場合は
 # イタリックの対応を用いる.
@@ -1107,6 +1114,15 @@ sub derive_param {
   my ($slx, $sly) = ($par->{slantx}, $par->{slanty});
   $par->{slant} = (defined $slx && defined $sly && $sly > 0) ?
     ($slx / $sly) : $std_slant;
+  # adjacc
+  if ($adjust_accent > 0) {
+    foreach my $cc (@adjust_accent_candidates) {
+      if ($par->{aj}{$cc}{wd} == 0) {
+        $par->{aj}{$cc}{wd} = $adjust_accent;
+        $par->{aj}{$cc}{adjacc} = 1;
+      }
+    }
+  }
 }
 
 ##----------------------------------------------------------
@@ -1271,11 +1287,18 @@ END2
 sub resolve_map {
   my ($uclist, $par, $ital) = @_;
   my $paraj = $par->{aj};
+  my $setchar = ($adjust_accent > 0) ?
+    (sub { return "(SETCHAR H @{[FH($_[0])]})" }) :
+    (sub { my ($cc) = @_;
+     my $set = "(SETCHAR H @{[FH($cc)]})";
+     return (!$paraj->{adjacc}{$cc}) ? ($set) :
+       ($set, "(MOVERIGHT R @{[FR($adjust_accent)]})");
+    });
   foreach my $uc (@$uclist) {
     if (!ref $uc) {
       my $cc = ucs2aj($uc, $ital) or next;
       my $t = $paraj->{$cc} or next;
-      return [ [ "(SETCHAR H @{[FH($cc)]})" ],
+      return [ [ $setchar->($cc) ],
                $t->{wd}, $t->{ht}, $t->{dp} ];
     } elsif ($uc->{type} == XNAV) {
       # AJ1 に対応しない文字
@@ -1304,8 +1327,8 @@ sub resolve_map {
       if ($ital) { $dx += $dy * $par->{slant}; }
       my @map = (
         "(PUSH)",
-        "(SETCHAR H @{[FH($cc1)]})", "(POP)",
-        "(SETCHAR H @{[FH($cc2)]})",
+        $setchar->($cc1), "(POP)",
+        $setchar->($cc2),
       );
       if ($dx != 0) {
         splice(@map, 1, 0, "(MOVERIGHT R @{[FR($dx)]})");
@@ -1323,8 +1346,8 @@ sub resolve_map {
       my $len1 = ($par2->{wd} - $par1->{wd}) / 2;
       my @map = (
         "(PUSH)", "(MOVERIGHT R @{[FR($len1)]})",
-        "(SETCHAR H @{[FH($cc1)]})", "(POP)",
-        "(SETCHAR H @{[FH($cc2)]})",
+        $setchar->($cc1), "(POP)",
+        $setchar->($cc2),
       );
       return [ \@map, $par2->{wd}, $par2->{ht}, $par2->{dp} ];
     } elsif ($uc->{type} == XLIN) {
@@ -1334,8 +1357,8 @@ sub resolve_map {
       my $par1 = $paraj->{$cc1} or next;
       my $par2 = $paraj->{$cc2} or next;
       my @map = (
-        "(SETCHAR H @{[FH($cc1)]})",
-        "(SETCHAR H @{[FH($cc2)]})",
+        $setchar->($cc1),
+        $setchar->($cc2),
       );
       my $len2 = $par->{kern}{$uc->{arg}[0]}{$uc->{arg}[1]};
       if (defined $len2) {
@@ -1725,6 +1748,7 @@ sub main {
   (defined $prop->{min_kern}) and $min_kern = $prop->{min_kern};
   (defined $prop->{std_slant}) and $std_slant = $prop->{std_slant};
   (defined $prop->{gid_offset}) and $gid_offset = $prop->{gid_offset};
+  (defined $prop->{adjust_accent}) and $adjust_accent = $prop->{adjust_accent};
   (defined $prop->{monospace}) and $monospace = 1;
   (defined $prop->{scale}) and $scale = 1;
   (defined $prop->{noitalic}) and $italic = 0;
@@ -1819,6 +1843,11 @@ sub read_option {
       (defined $arg) or $arg = shift(@ARGV);
       ($arg =~ m/^[0-9]+$/) or error("bad gid-offset value", $arg);
       $prop->{gid_offset} = $arg;
+    } elsif (($arg) = $opt =~ m/^--adjust-accent(?:=(.*))?$/) {
+      (defined $arg) or $arg = shift(@ARGV);
+      ($arg =~ m/^[.0-9]+$/ && 0 <= $arg)
+        or error("bad adjust-accent value", $arg);
+      $prop->{adjust_accent} = $arg;
     } elsif (($arg) = $opt =~ m/^-(?:i|-index)(?:=(.*))?$/) {
       (defined $arg) or $arg = shift(@ARGV);
       ($arg =~ m/^[0-9]+$/) or error("bad TTC index value", $arg);
