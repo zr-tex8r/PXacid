@@ -29,6 +29,8 @@ our $oblique = 1;
 # アレ
 our $gid_offset = 0;
 # アレ
+our $gid_max = 0;
+# アレ
 our $avoid_notdef = 0;
 # アレ
 our $adjust_accent = 0;
@@ -860,6 +862,9 @@ sub gen_target_list {
     }
   }
   $target_aj = [ sort { $a <=> $b } (keys %chk) ];
+  if ($gid_max > 0) {
+    $target_aj = [ grep { $_ <= $gid_max } (@$target_aj) ];
+  }
 }
 
 # 対象となる TeX エンコーディングのリスト.
@@ -1226,7 +1231,7 @@ END
         my $uc2 = tex2ucs($enc, $tc2, $ital);
         my $kern = (defined $uc2 && !ref $uc2) && $park1->{$uc2};
         my $ligres = $lig1->{$tc2};
-        if (defined $ligres) {
+        if (defined $ligres && $valid[$ligres]) {
           push(@lkcnks, "(LIG H @{[FH($tc2)]} H @{[FH($ligres)]})");
         } elsif (abs($kern) >= $min_kern) {
           push(@lkcnks, "(KRN H @{[FH($tc2)]} R @{[FR($kern)]})");
@@ -1748,6 +1753,7 @@ sub main {
   (defined $prop->{min_kern}) and $min_kern = $prop->{min_kern};
   (defined $prop->{std_slant}) and $std_slant = $prop->{std_slant};
   (defined $prop->{gid_offset}) and $gid_offset = $prop->{gid_offset};
+  (defined $prop->{gid_max}) and $gid_max = $prop->{gid_max};
   (defined $prop->{adjust_accent}) and $adjust_accent = $prop->{adjust_accent};
   (defined $prop->{monospace}) and $monospace = 1;
   (defined $prop->{scale}) and $scale = 1;
@@ -1843,6 +1849,11 @@ sub read_option {
       (defined $arg) or $arg = shift(@ARGV);
       ($arg =~ m/^[0-9]+$/) or error("bad gid-offset value", $arg);
       $prop->{gid_offset} = $arg;
+    } elsif (($arg) = $opt =~ m/^--gid-max(?:=(.*))?$/) {
+      (defined $arg) or $arg = shift(@ARGV);
+      ($arg =~ m/^[0-9]+$/ && 256 <= $arg)
+        or error("bad gid-max value", $arg);
+      $prop->{gid_max} = $arg;
     } elsif (($arg) = $opt =~ m/^--adjust-accent(?:=(.*))?$/) {
       (defined $arg) or $arg = shift(@ARGV);
       ($arg =~ m/^[.0-9]+$/ && 0 <= $arg)
@@ -1902,6 +1913,8 @@ Options are:
        --no-italic          suppress italic shape
        --avoid-notdef       avoid glyphs that seem like notdef
        --gid-offset=<val>   offset between CID and GID
+       --gid-max=<val>
+       --adjust-accent=<val>
        --debug=<name>,...   enable debug features
                             (name: nooblique onlyt1 savelog)
 END
