@@ -1615,14 +1615,18 @@ in fluffy souffl\'es?\end{quote}}
 \par\bigskip
 END
   foreach my $enc (@$enc_list) {
-    my $blk = <<'END';
+    my $blk = ($enc ne 'TS1') ? <<'END1' : <<'END2';
 \fontencoding{?ENC?}\selectfont
-\upshape\noindent[Upright shape, ?ENC? encoding]\Test?X?\par
-\itshape\noindent[Italic shape, ?ENC? encoding]\Test?X?\par
-\slshape\noindent[Slanted shape, ?ENC? encoding]\Test?X?\par
-END
-    my $x = ($enc ne 'TS1') ? 'B' : 'A';
-    $blk =~ s/\?ENC\?/$enc/g; $blk =~ s/\?X\?/$x/g; $_ .= $blk;
+\upshape\noindent[Upright shape, ?ENC? encoding]\TestA\par
+\itshape\noindent[Italic shape, ?ENC? encoding]\TestA\par
+\slshape\noindent[Slanted shape, ?ENC? encoding]\TestA\par
+END1
+% ?ENC?
+\upshape\noindent[Upright shape, ?ENC? encoding]\TestB\par
+\itshape\noindent[Italic shape, ?ENC? encoding]\TestB\par
+\slshape\noindent[Slanted shape, ?ENC? encoding]\TestB\par
+END2
+    $blk =~ s/\?ENC\?/$enc/g; $_ .= $blk;
   }
   $_ .= <<'END';
 \end{document}
